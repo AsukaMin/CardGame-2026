@@ -1,0 +1,248 @@
+# 单机卡牌游戏：简化版 UI 框架设计
+
+> 整理自 2026-10-13 讨论，接续《单机卡牌对战游戏-板块划分与离线补丁方案》。结论：单机卡牌不上 ET 框架，用"纯 C# 战斗核心 + 简化版 UI 管理 + JSON 配置"三件套；本文是其中 UI 层的完整设计。
+
+## 一、为什么不用 ET
+
+| ET 解决的问题 | 单机卡牌 |
+|---|---|
+| 网络同步/多人对战 | 不需要，本地打 AI |
+| 服务器逻辑 | 没有 |
+| 代码热更（ILRuntime/双程序集） | 已定走 JSON 数据补丁，代码不热更 |
+| 登录/网关/心跳 | 没有 |
+
+成本却是实打实的：ILRuntime 绑定过期、跨域委托、重导 dll、框架版本升级迁移。个人项目所有复杂度自己付，零收益。
+
+**ET 的思想照搬**：组件化组织、窗口管理模式、配置表驱动——搬思想不搬框架。
+
+## 二、简化对照表
+
+| ET 的机制 | 简化版 |
+|---|---|
+| UIComponent + UIWindow 双组件 | 一个 UIWindow 基类 |
+| UIObjs 名字字典建引用 | **[SerializeField] 拖引用**（最大简化） |
+| ShowAsync 协程加载 | 同步加载 |
+| EventSystem 事件派发 | C# event |
+| OnCreate/OnShow/OnHide 生命周期、OpenType 传参、隐藏不销毁缓存复用 | **照搬保留** |
+
+关键简化：**窗口类直接做成 MonoBehaviour**。预制体根节点挂窗口脚本，引用 Inspector 里拖，UIObjs 字典、重名、空条目整套问题不存在。
+
+## 三、核心代码
+
+### UIWindow.cs —— 窗口基类
+
+每个窗口 = 一个预制体 + 这个类的一个子类。
+
+```csharp
+public abstract class UIWindow : MonoBehaviour
+{
+    public bool Opened { get; internal set; }
+
+    public virtual void OnCreate(UIParam param) { }  // 只走一次：初始化列表、按钮注册
+    public virtual void OnShow(UIParam param) { }    // 每次打开：吃参数、刷新显示
+    public virtual void OnHide() { }                 // 隐藏：退订事件、停动画
+}
+```
+
+### UIManager.cs —— 三层管理器
+
+```csharp
+public class UIManager : MonoBehaviour
+{
+    public static UIManager I { get; private set; }
+
+    [SerializeField] Transform fullscreenLayer;   // 全屏窗：互斥，开新顶旧
+    [SerializeField] Transform popupLayer;        // 弹窗：可叠加，按栈回退
+    [SerializeField] Transform tipLayer;          // 提示：过路即走
+
+    readonly Dictionary<string, UIWindow> cache = new Dictionary<string, UIWindow>();
+    readonly List<string> popupStack = new List<string>();
+
+    void Awake() { I = this; }
+
+    public void Show(string winName, UIParam param = null)
+    {
+        if (!cache.TryGetValue(winName, out UIWindow win))
+        {
+            GameObject prefab = Resources.Load<GameObject>("UI/" + winName); // 约定：预制体名=类名
+            win = Instantiate(prefab, LayerOf(winName)).GetComponent<UIWindow>();
+            cache[winName] = win;
+        }
+
+        win.gameObject.SetActive(true);
+        if (!win.Opened)
+        {
+            win.Opened = true;
+            win.OnCreate(param);
+        }
+        win.OnShow(param);
+        // 全屏窗顶掉同层旧的；弹窗压栈（几行 if/列表操作）
+    }
+
+    public void Hide(string winName)
+    {
+        if (cache.TryGetValue(winName, out UIWindow win))
+        {
+            win.OnHide();
+            win.gameObject.SetActive(false);   // 缓存复用，不销毁——ET 同款策略
+        }
+    }
+
+    public void Back()
+    {
+        if (popupStack.Count > 0) Hide(popupStack[popupStack.Count - 1]);
+    }
+}
+```
+
+### UIParam.cs —— OpenType + 参数包
+
+```csharp
+public class UIParam
+{
+    public string OpenType;   // "Edit" / "View" / "BattleResult"……
+    readonly Dictionary<string, object> map = new Dictionary<string, object>();
+
+    public void Set(string key, object value) { map[key] = value; }
+    public T Get<T>(string key) { object v; map.TryGetValue(key, out v); return (T)v; }
+}
+```
+
+用法：
+
+```csharp
+UIParam p = new UIParam();
+p.OpenType = "Edit";
+p.Set("DeckId", 1001);
+UIManager.I.Show("DeckWindow", p);
+```
+
+## 四、跨窗口通信：三条通道
+
+**原则：先分方向，别混用。**
+
+| 方向 | 通道 | 原则 |
+|---|---|---|
+| 战斗 → UI（"发生了什么"） | C# event 广播 | 事件只报事实，过去时态，不关心谁在听 |
+| UI → 战斗（"我要做什么"） | **直接调方法**，不走事件 | 要返回值、要失败原因 |
+| UI ↔ UI（窗口间） | 一次性应答用**回调**；全局广播才用事件 | 大多数"窗口间通信"是父子对话 |
+
+### 1. 战斗 → UI：事件广播
+
+```csharp
+// BattleEvents.cs —— 战斗核心唯一对外的"嘴"
+public static class BattleEvents
+{
+    public static event Action<int, int> OnHpChanged;        // (单位Id, 新血量)
+    public static event Action<int> OnCardDrawn;             // 卡牌实例Id
+    public static event Action<int> OnCardPlayed;
+    public static event Action<int> OnUnitDied;
+    public static event Action<BattleResult> OnBattleEnd;
+    public static event Action<int> OnTurnStart;             // 回合数
+}
+```
+
+战斗核心只管发，不知道有没有 UI 在听：
+
+```csharp
+void ApplyDamage(Unit unit, int amount)
+{
+    unit.Hp = Math.Max(0, unit.Hp - amount);
+    BattleEvents.OnHpChanged?.Invoke(unit.Id, unit.Hp);   // ?. 判空：没 UI 也照常跑
+    if (unit.Hp == 0)
+    {
+        BattleEvents.OnUnitDied?.Invoke(unit.Id);
+        // 死亡结算……
+    }
+}
+```
+
+UI 侧**铁律：OnShow 订阅、OnHide 退订，永远成对**；且订阅后立刻按当前状态全量刷新一次（晚开窗会错过历史事件）：
+
+```csharp
+public class BattleWindow : UIWindow
+{
+    [SerializeField] Text hpText;
+
+    public override void OnShow(UIParam p)
+    {
+        BattleEvents.OnHpChanged += RefreshHp;
+        BattleEvents.OnBattleEnd += OnBattleEnd;
+        RefreshAll();   // 订阅后立刻全量刷，否则界面是错的
+    }
+
+    public override void OnHide()
+    {
+        BattleEvents.OnHpChanged -= RefreshHp;
+        BattleEvents.OnBattleEnd -= OnBattleEnd;
+    }
+}
+```
+
+### 2. UI → 战斗：直接调用
+
+```csharp
+public void OnCardClicked(int handIndex)
+{
+    PlayResult r = battle.PlayCard(handIndex);
+    if (!r.Success)
+        ShowTip(r.Error);
+}
+```
+
+事件没有返回值；用事件做命令等于把一次函数调用拆成"发事件→收回执→再订阅回执"，凭空造出异步和时序问题。**事件宣布事实，方法调用下命令。**
+
+### 3. UI ↔ UI：先问"是不是父子对话"
+
+一次性选择用**回调参数**，调用方把自己的意图塞进 UIParam，被调窗口零依赖可复用：
+
+```csharp
+// CardPickWindow：通用选卡弹窗
+public class CardPickWindow : UIWindow
+{
+    Action<int> onPicked;
+
+    public override void OnShow(UIParam p)
+    {
+        onPicked = p.Get<Action<int>>("OnPicked");
+        RefreshList(p.Get<List<int>>("CandidateIds"));
+    }
+
+    public void OnCardClicked(int cardId)
+    {
+        onPicked?.Invoke(cardId);
+        UIManager.I.Hide("CardPickWindow");
+    }
+}
+
+// DeckWindow：调用方
+UIParam p = new UIParam();
+p.Set("CandidateIds", ownedCardIds);
+p.Set("OnPicked", (Action<int>)(cardId => AddToDeck(cardId)));
+UIManager.I.Show("CardPickWindow", p);
+```
+
+什么时候用事件做 UI↔UI：**多个窗口要同时知道同一件事**（如货币变化，主界面/商店/卡包页都要刷）。
+
+## 五、两个要防的坑
+
+1. **过期订阅**：窗口缓存不销毁时配对订阅/退订不会出事；若改成"关闭即 Destroy"，忘退订的窗口就是悬空引用，下一发事件就 NRE。OnShow 加几行 +=，OnHide 就得有几行 -=。
+2. **静态事件跨场残留**：回主菜单重开一局时，上一局订阅者没退干净会收到新战斗事件。第 1 条做到即自动成立；再保险可在战斗重开时发 `OnBattleReset` 让漏网窗口自刷。
+
+## 六、规模化整理
+
+事件多了按业务域拆文件，**不换机制**：
+
+```csharp
+BattleEvents.cs   // 战斗内：掉血、抽牌、回合
+MetaEvents.cs     // 局外：货币、卡牌解锁、卡组保存
+UiEvents.cs       // UI 自己的事：弹窗关闭、红点变化
+```
+
+**不要**上来写反射式泛型 EventBus（字符串/Type 当 key）——事件名拼错编译器不报错，那是 ET 为大型项目付的灵活性代价。三五个静态类、编译期全检查，单机卡牌绰绰有余；30+ 事件再考虑。
+
+## 七、收拢
+
+> **战斗对 UI 只有事件（说事实），UI 对战斗只有方法（下命令），窗口对窗口先考虑回调（父子对话），事件只留给"多个窗口共同关心的一件事"。**
+
+整套 UI 框架两三百行：一个管理器 + 一个窗口基类 + 一个参数包 + 几个静态事件类。没有反射、没有字典绑定、没有异步链，复杂度全部留给卡牌玩法本身。

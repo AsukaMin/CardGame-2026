@@ -1,0 +1,23 @@
+# Unity 生成物（.meta 和 ProjectSettings 要进库，别忽略）
+Unity/Library/
+Unity/Temp/
+Unity/Logs/
+Unity/UserSettings/
+Unity/.vs/
+Unity/*.sln
+Unity/*.csproj
+Unity/obj/
+
+# ZCode 工具会话文件
+.zcode/
+
+# 可再生产物（出包/打包按钮生成，随时可删重出）
+PatchSource/
+Build/
+
+# 素材库是独立仓库（单独给美术开权限），不进本仓库
+arts/
+
+# OS
+Thumbs.db
+.DS_Store
