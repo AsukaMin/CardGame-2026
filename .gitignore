@@ -16,7 +16,7 @@ PatchSource/
 Build/
 
 # 素材库是独立仓库（单独给美术开权限），不进本仓库
-arts/
+CardGame_Arts/
 
 # OS
 Thumbs.db
