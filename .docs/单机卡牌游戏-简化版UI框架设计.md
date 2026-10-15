@@ -20,12 +20,12 @@
 | ET 的机制 | 简化版 |
 |---|---|
 | UIComponent + UIWindow 双组件 | 一个 UIWindow 基类 |
-| UIObjs 名字字典建引用 | **[SerializeField] 拖引用**（最大简化） |
+| UIObjs 名字字典建引用 | **弃用**；控件绑定改走"命名扫描 + 序列化引用表"（见下文） |
 | ShowAsync 协程加载 | 同步加载 |
 | EventSystem 事件派发 | C# event |
 | OnCreate/OnShow/OnHide 生命周期、OpenType 传参、隐藏不销毁缓存复用 | **照搬保留** |
 
-关键简化：**窗口类直接做成 MonoBehaviour**。预制体根节点挂窗口脚本，引用 Inspector 里拖，UIObjs 字典、重名、空条目整套问题不存在。
+关键简化：**窗口类直接做成 MonoBehaviour**。预制体根节点挂窗口脚本；控件引用在编辑期扫描序列化（见下文"控件引用"），运行时零查找。
 
 ## 三、核心代码
 
@@ -41,8 +41,29 @@ public abstract class UIWindow : MonoBehaviour
     public virtual void OnCreate(UIParam param) { }  // 只走一次：初始化列表、按钮注册
     public virtual void OnShow(UIParam param) { }    // 每次打开：吃参数、刷新显示
     public virtual void OnHide() { }                 // 隐藏：退订事件、停动画
+
+    // 控件引用：预序列化引用表（见下节），GetButton("key") / GetText("key") 按取用
 }
 ```
+
+### 控件引用：命名扫描 + 预序列化
+
+窗口里的控件引用不在运行时按名字查找，一律编辑期解决：
+
+1. 预制体里给控件按约定命名（Hierarchy 选中节点右键 `GameObject/UIWindow/改名为 …` 一键完成）：
+
+   | 节点名 | 含义 | 代码取用 |
+   |---|---|---|
+   | `&_image_key_&` | Image | `GetImage("key")` |
+   | `&_button_key_&` | Button | `GetButton("key")` |
+   | `&_text_key_&` | TMP_Text | `GetText("key")` |
+   | `&_gameobject_key_&` | 任意节点 | `GetGameObject("key")` |
+   | `$_node_key_$` | 嵌套子窗口（扫描到此为止，不深入） | `GetWindow("key")` |
+
+2. 选中窗口根节点，Inspector 点"扫描子节点"（Editor/UIWindowEditor）：递归收集所有约定命名的控件，把组件引用随预制体序列化保存；重名 key 自动加后缀改名消解。
+3. 运行时只把序列化列表搬进字典，按 key 取用，零 Find/零 GetComponent。
+
+完整工作流与注意事项见《UI框架-控件引用预序列化》。
 
 ### UIManager.cs —— 三层管理器
 
@@ -162,7 +183,7 @@ UI 侧**铁律：OnShow 订阅、OnHide 退订，永远成对**；且订阅后�
 ```csharp
 public class BattleWindow : UIWindow
 {
-    [SerializeField] Text hpText;
+    void RefreshHp(int unitId, int hp) => GetText("hp").text = hp.ToString(); // 控件来自序列化引用表
 
     public override void OnShow(UIParam p)
     {
@@ -245,4 +266,4 @@ UiEvents.cs       // UI 自己的事：弹窗关闭、红点变化
 
 > **战斗对 UI 只有事件（说事实），UI 对战斗只有方法（下命令），窗口对窗口先考虑回调（父子对话），事件只留给"多个窗口共同关心的一件事"。**
 
-整套 UI 框架两三百行：一个管理器 + 一个窗口基类 + 一个参数包 + 几个静态事件类。没有反射、没有字典绑定、没有异步链，复杂度全部留给卡牌玩法本身。
+整套 UI 框架两三百行：一个管理器 + 一个窗口基类 + 一个参数包 + 几个静态事件类。没有反射、没有运行时查找、没有异步链，复杂度全部留给卡牌玩法本身。
