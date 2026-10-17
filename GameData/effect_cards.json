@@ -1,3 +1,17 @@
 {
-  "cards":[]
+  "cards":[
+    {
+      
+      "id": 1,
+      "name": "新效果卡1",
+      "tiers": [
+        {
+          
+          "cost": 2,
+          "label": "低配",
+          "effects": []
+        }
+      ]
+    }
+  ]
 }
