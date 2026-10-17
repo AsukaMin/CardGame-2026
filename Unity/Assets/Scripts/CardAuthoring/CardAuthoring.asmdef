@@ -1,0 +1,16 @@
+{
+    "name": "CardAuthoring",
+    "rootNamespace": "CardAuthoring",
+    "references": [
+        "Battle"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
