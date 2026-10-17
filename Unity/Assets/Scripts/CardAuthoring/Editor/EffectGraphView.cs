@@ -23,7 +23,7 @@ namespace CardAuthoring.Editor
             this.AddManipulator(new ContentDragger());
             this.AddManipulator(new SelectionDragger());
             this.AddManipulator(new RectangleSelector());
-            this.AddManipulator(new ContentZoomer(0.2f, 3f));
+            this.AddManipulator(new ContentZoomer { minScale = 0.2f, maxScale = 3f });
 
             GridBackground grid = new GridBackground();
             Insert(0, grid);
@@ -33,6 +33,27 @@ namespace CardAuthoring.Editor
 
             RegisterCallback<ContextualMenuPopulateEvent>(BuildContextMenu);
             graphViewChanged += OnGraphChanged;
+
+            // 选择通知走 PointerDown（UIToolkit 基石 API，规避各版本 GraphView 事件名差异）：
+            // 左键点中节点 → NodePicked(节点)；左键点空白/背景 → NodePicked(null)
+            RegisterCallback<PointerDownEvent>(evt =>
+            {
+                if (evt.button != 0) return;
+                VisualElement target = evt.target as VisualElement;
+                bool onNode = target != null && target.GetFirstAncestorOfType<Node>() != null;
+                if (!onNode) NodePicked?.Invoke(null);
+            });
+        }
+
+        /// <summary>左键点中节点（点空白处传 null）——窗口用它驱动右侧节点 Inspector。</summary>
+        public event Action<GraphElement> NodePicked;
+
+        void HookNodePointer(GraphElement element)
+        {
+            element.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                if (evt.button == 0) NodePicked?.Invoke(element);
+            });
         }
 
         // ---------- 菜单 ----------
@@ -57,6 +78,7 @@ namespace CardAuthoring.Editor
 
         void AddNode(GraphElement node)
         {
+            HookNodePointer(node);
             AddElement(node);
             onDirty?.Invoke();
         }
@@ -91,8 +113,8 @@ namespace CardAuthoring.Editor
             if (!(edge.output.node is EffectDefNode || edge.output.node is OpNode)) return false;
             if (edge.input.node == edge.output.node) return false;          // 不允许自环
 
-            // 单进/单出（pending 边尚未连接，connected() 只统计已建立的边）
-            if (edge.output.connected() || edge.input.connected()) return false;
+            // 单进/单出（pending 边尚未连接，connected 只统计已建立的边）
+            if (edge.output.connected || edge.input.connected) return false;
 
             // 成环检测：从输入端沿现有出边走，能回到输出端即成环
             HashSet<Node> visited = new HashSet<Node>();
@@ -135,6 +157,7 @@ namespace CardAuthoring.Editor
                 {
                     var node = new EffectDefNode(d, onDirty);
                     defNodes[d.guid] = node;
+                    HookNodePointer(node);
                     AddElement(node);
                 }
             if (opNodes != null)
@@ -142,6 +165,7 @@ namespace CardAuthoring.Editor
                 {
                     var node = new OpNode(n, onDirty);
                     opNodesByGuid[n.guid] = node;
+                    HookNodePointer(node);
                     AddElement(node);
                 }
             if (connections != null)
