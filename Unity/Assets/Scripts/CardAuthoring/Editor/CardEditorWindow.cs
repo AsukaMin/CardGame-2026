@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
-using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -57,7 +56,8 @@ namespace CardAuthoring.Editor
 
             // 中栏：画布
             graph = new EffectGraphView(MarkDirty);
-            graph.NodePicked += element => nodeInspector.Show(element, MarkDirty);
+            graph.selectionChanged += selection =>
+                nodeInspector.Show(selection?.OfType<GraphElement>().FirstOrDefault(), MarkDirty);
             graph.style.flexGrow = 1;
             main.Add(graph);
 
@@ -72,7 +72,7 @@ namespace CardAuthoring.Editor
             root.Add(main);
             root.RegisterCallback<KeyDownEvent>(evt =>
             {
-                if (evt.ctrlKey && evt.keyCode == KeyCode.S)
+                if (evt.ctrlKey && evt.key == "s")
                 {
                     evt.StopPropagation();
                     Save();
@@ -99,8 +99,7 @@ namespace CardAuthoring.Editor
             };
             list.selectionChanged += items =>
             {
-                ScriptableObject first = items?.FirstOrDefault() as ScriptableObject;
-                if (first != null) SelectAsset(first);
+                if (items.Count > 0) SelectAsset((ScriptableObject)items[0]);
             };
             return list;
         }
