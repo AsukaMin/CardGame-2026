@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GameEvents;
 
 namespace Battle
 {
@@ -33,6 +34,20 @@ namespace Battle
         int nextCardId = 1000;
         bool finished;
 
+        // 表现挂起（演出事件）：DeferPresentationEvents=true 时，PlayAfterAnimation 效果组入队等待事件放行
+        readonly bool deferPresentation;
+        readonly List<DeferredEffect> deferred = new List<DeferredEffect>();
+        bool suppressingDefer; // 事件放行结算期间抑制再次挂起，否则被冲出的组会无限回流
+
+        class DeferredEffect
+        {
+            public EffectDef Def;
+            public Side SourceSide;
+            public int? SourceUnitId;
+            public int? ChosenTargetId;
+            public int UnitId => SourceUnitId ?? 0;
+        }
+
         class RosterEntry
         {
             public MonsterSleeve Sleeve;
@@ -47,6 +62,9 @@ namespace Battle
             interpreter = new EffectInterpreter(this);
             economy = new ActionEconomy(tuning.InitialActionPoints);
             ai = new EnemyAI(setup.Enemy ?? new EnemyConfig(), rng);
+            deferPresentation = setup.DeferPresentationEvents;
+            if (deferPresentation)
+                GameEventBus.Subscribe<EntranceAnimDone>(OnEntranceAnimDone);
 
             foreach (MonsterSleeve sleeve in setup.PlayerRoster)
             {
@@ -79,6 +97,9 @@ namespace Battle
         public bool Finished => finished;
         public BattleResult Result { get; private set; }
         public IReadOnlyList<Intent> EnemyIntents => enemyIntents;
+
+        /// <summary>表现挂起模式下等待演出放行的效果组数量（快照同名字段的数据源）。</summary>
+        public int PendingDeferredCount => deferred.Count;
 
         internal Battlefield Field => field;
         internal Rng Rng => rng;
@@ -120,8 +141,8 @@ namespace Battle
             return PlayResult.Ok();
         }
 
-        /// <summary>召唤名单中的怪兽卡套（每张每场限一次；无召唤失调，当回合可攻击）。</summary>
-        public PlayResult SummonMonster(int rosterIndex)
+        /// <summary>召唤名单中的怪兽卡套（每张每场限一次；无召唤失调，当回合可攻击）。chosenTargetId 透传给入场效果链（"入场时选目标"类卡的通道）。</summary>
+        public PlayResult SummonMonster(int rosterIndex, int chosenTargetId = 0)
         {
             PlayResult gate = RequirePlayerMain();
             if (gate != null) return gate;
@@ -140,7 +161,7 @@ namespace Battle
                 return PlayResult.Fail(FailReason.NotEnoughPoints,
                     $"行动点不足：召唤需 {cost}，当前 {economy.Points}");
 
-            SummonUnit(entry.Sleeve, Side.Player);
+            SummonUnit(entry.Sleeve, Side.Player, chosenTargetId);
             entry.Status = RosterStatus.OnField;
             return PlayResult.Ok();
         }
@@ -238,6 +259,7 @@ namespace Battle
                 DeckCount = deck.Count,
                 HandCount = hand.Count,
                 GraveyardPackageCount = graveyard.Count,
+                PendingDeferredCount = deferred.Count,
             };
 
             foreach (BattleUnit u in field.AllUnits)
@@ -413,7 +435,7 @@ namespace Battle
 
         // ---------- 内部：召唤/攻击/伤害/死亡 ----------
 
-        void SummonUnit(MonsterSleeve sleeve, Side side)
+        void SummonUnit(MonsterSleeve sleeve, Side side, int chosenTargetId = 0)
         {
             (int atk, int hp) = sleeve.BaseStats;
             int maxHp = Math.Max(1, hp);
@@ -433,9 +455,9 @@ namespace Battle
             field.Add(unit);
             BattleEvents.FireUnitSummoned(unit.Id);
 
-            // 入场槽：召唤时触发
+            // 入场槽：召唤时触发（chosenTargetId=召唤时指定的技能主目标）
             foreach (PartCardConfig part in sleeve.PartsOf(SlotType.OnSummon))
-                interpreter.Execute(part.Effects, side, unit.Id, null);
+                interpreter.Execute(part.Effects, side, unit.Id, chosenTargetId > 0 ? chosenTargetId : (int?)null);
 
             RecomputeAuras();
             ProcessDeaths();     // 入场伤害可能直接击杀
@@ -595,6 +617,7 @@ namespace Battle
         {
             finished = true;
             Phase = BattlePhase.Finished;
+            deferred.Clear(); // 终局不再需要演出放行
             BattleResult result = new BattleResult
             {
                 PlayerWon = playerWon,
@@ -616,6 +639,49 @@ namespace Battle
 
             Result = result;
             BattleEvents.FireBattleEnd(result);
+        }
+
+        // ---------- 内部：表现挂起 ----------
+
+        /// <summary>效果解释器调用：表现挂起模式下拦截 PlayAfterAnimation 组入队；否则不拦截（放行结算期间抑制）。</summary>
+        internal bool TryDeferForPresentation(EffectDef def, Side sourceSide, int? sourceUnitId, int? chosenTargetId)
+        {
+            if (suppressingDefer || !deferPresentation || !def.PlayAfterAnimation) return false;
+            deferred.Add(new DeferredEffect
+            {
+                Def = def,
+                SourceSide = sourceSide,
+                SourceUnitId = sourceUnitId,
+                ChosenTargetId = chosenTargetId,
+            });
+            return true;
+        }
+
+        /// <summary>表现层事件：某单位入场动画演出完成 → 放行其挂起效果组（同步结算，期间抑制再次挂起）。</summary>
+        void OnEntranceAnimDone(EntranceAnimDone e)
+        {
+            suppressingDefer = true;
+            try
+            {
+                for (int i = deferred.Count - 1; i >= 0; i--)
+                {
+                    if (deferred[i].UnitId != e.UnitId) continue;
+                    DeferredEffect d = deferred[i];
+                    deferred.RemoveAt(i);
+                    interpreter.Execute(new[] { d.Def }, d.SourceSide, d.SourceUnitId, d.ChosenTargetId);
+                }
+            }
+            finally
+            {
+                suppressingDefer = false;
+            }
+        }
+
+        /// <summary>销毁会话：退订全局事件（静态总线跨战斗存活，订阅必须成对——见《事件系统设计》）。</summary>
+        public void Dispose()
+        {
+            GameEventBus.Unsubscribe<EntranceAnimDone>(OnEntranceAnimDone);
+            deferred.Clear();
         }
 
         // ---------- 内部：杂项 ----------

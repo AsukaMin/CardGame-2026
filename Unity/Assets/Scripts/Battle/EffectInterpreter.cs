@@ -13,26 +13,27 @@ namespace Battle
 
         public EffectInterpreter(BattleSession session) => this.session = session;
 
-        /// <summary>执行一组效果。sourceSide/sourceUnitId 为效果来源；chosenTargetId 为玩家指定目标。</summary>
+        /// <summary>执行一组效果。sourceSide/sourceUnitId 为效果来源；chosenTargetId 为玩家指定目标（技能主目标）。</summary>
         public void Execute(EffectDef[] defs, Side sourceSide, int? sourceUnitId, int? chosenTargetId)
         {
             if (defs == null) return;
             foreach (EffectDef def in defs)
             {
                 if (def == null || def.Ops == null || def.Ops.Length == 0) continue;
+                if (session.TryDeferForPresentation(def, sourceSide, sourceUnitId, chosenTargetId)) continue;
                 List<EffectTarget> targets = ResolveTargets(def.Target, sourceSide, sourceUnitId, chosenTargetId);
                 foreach (EffectTarget target in targets)
-                    RunOps(def.Ops, target, sourceSide, sourceUnitId);
+                    RunOps(def.Ops, target, sourceSide, sourceUnitId, chosenTargetId);
             }
         }
 
-        void RunOps(EffectOp[] ops, EffectTarget target, Side sourceSide, int? sourceUnitId)
+        void RunOps(EffectOp[] ops, EffectTarget target, Side sourceSide, int? sourceUnitId, int? chosenTargetId)
         {
             foreach (EffectOp op in ops)
-                ApplyOp(op, target, sourceSide, sourceUnitId);
+                ApplyOp(op, target, sourceSide, sourceUnitId, chosenTargetId);
         }
 
-        void ApplyOp(EffectOp op, EffectTarget target, Side sourceSide, int? sourceUnitId)
+        void ApplyOp(EffectOp op, EffectTarget target, Side sourceSide, int? sourceUnitId, int? chosenTargetId)
         {
             switch (op)
             {
@@ -76,25 +77,66 @@ namespace Battle
                     break;
 
                 case ConditionalOp cond:
-                    EffectOp[] branch = EvalCondition(cond.Condition, target) ? cond.Then : cond.Else;
-                    if (branch != null) RunOps(branch, target, sourceSide, sourceUnitId);
+                    EffectTarget conditionObj = ResolveConditionTarget(
+                        cond.ConditionTarget, target, sourceSide, sourceUnitId, chosenTargetId);
+                    EffectOp[] branch = EvalCondition(cond.Condition, conditionObj) ? cond.Then : cond.Else;
+                    if (branch != null) RunOps(branch, target, sourceSide, sourceUnitId, chosenTargetId);
                     break;
             }
         }
 
         bool EvalCondition(ConditionDef condition, EffectTarget target)
         {
-            switch (condition)
+            if (condition == null) return true;
+            if (condition is AttributeCompareCondition cmp)
             {
-                case null:
-                    return true;
-                case TargetHpBelowPercentCondition below:
-                    return HpOf(target) <= MaxHpOf(target) * below.Percent;
-                case TargetIsFullHpCondition full:
-                    return HpOf(target) >= MaxHpOf(target);
-                default:
-                    return false;
+                double left = AttrValue(target, cmp.Attr);
+                double rhs = cmp.ValueType == CompareValueType.PercentOfMaxHp
+                    ? MaxHpOf(target) * cmp.Value / 100.0
+                    : cmp.Value;
+                switch (cmp.Op)
+                {
+                    case CompareOperator.Greater: return left > rhs;
+                    case CompareOperator.GreaterOrEqual: return left >= rhs;
+                    case CompareOperator.Less: return left < rhs;
+                    case CompareOperator.LessOrEqual: return left <= rhs;
+                    case CompareOperator.Equal: return Math.Abs(left - rhs) < 1e-9;
+                    case CompareOperator.NotEqual: return Math.Abs(left - rhs) >= 1e-9;
+                    default: return false;
+                }
             }
+            return false;
+        }
+
+        /// <summary>属性取值：主战者的攻击视为 0（主战者不攻击，既定规则）。</summary>
+        double AttrValue(EffectTarget t, ConditionAttr attr)
+        {
+            if (!t.IsUnit)
+            {
+                return attr == ConditionAttr.Hp ? session.HpOf(t.HeroSide)
+                    : attr == ConditionAttr.MaxHp ? session.MaxHpOf(t.HeroSide)
+                    : 0;
+            }
+            return attr == ConditionAttr.Hp ? t.Unit.Hp
+                : attr == ConditionAttr.MaxHp ? t.Unit.EffectiveMaxHp
+                : t.Unit.EffectiveAttack;
+        }
+
+        /// <summary>条件求值对象：Current=被作用目标 / Caster=施法者 / MainTarget=技能主目标（命令传入）。</summary>
+        EffectTarget ResolveConditionTarget(ConditionTargetKind kind, EffectTarget current,
+            Side sourceSide, int? sourceUnitId, int? chosenTargetId)
+        {
+            EffectTarget? picked =
+                kind == ConditionTargetKind.Caster ? FirstOf(TargetMode.Caster, sourceSide, sourceUnitId, chosenTargetId)
+                : kind == ConditionTargetKind.MainTarget ? FirstOf(TargetMode.Chosen, sourceSide, sourceUnitId, chosenTargetId)
+                : (EffectTarget?)null;
+            return picked ?? current;
+        }
+
+        EffectTarget? FirstOf(TargetMode mode, Side sourceSide, int? sourceUnitId, int? chosenTargetId)
+        {
+            List<EffectTarget> targets = ResolveTargets(mode, sourceSide, sourceUnitId, chosenTargetId);
+            return targets.Count > 0 ? (EffectTarget?)targets[0] : null;
         }
 
         int HpOf(EffectTarget t) => t.IsUnit ? t.Unit.Hp : session.HpOf(t.HeroSide);
@@ -153,6 +195,19 @@ namespace Battle
 
                 case TargetMode.FriendlyHero:
                     targets.Add(new EffectTarget(sourceSide));
+                    break;
+
+                case TargetMode.Caster:
+                    // 施法者：来源单位（部位卡效果=所属单位）优先，否则来源方主战者（效果卡）
+                    if (sourceUnitId.HasValue)
+                    {
+                        BattleUnit caster = session.Field.GetUnit(sourceUnitId.Value);
+                        if (caster != null) targets.Add(new EffectTarget(caster));
+                    }
+                    else
+                    {
+                        targets.Add(new EffectTarget(sourceSide));
+                    }
                     break;
             }
             return targets;

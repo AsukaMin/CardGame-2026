@@ -27,6 +27,9 @@ namespace Battle
         /// <summary>随机种子（复现 bug 的锚点）。</summary>
         public int Seed = 20261017;
 
+        /// <summary>表现挂起模式：true 时 PlayAfterAnimation 效果组挂起，等待 EntranceAnimDone 全局事件放行（默认 false=立即结算，无 UI/headless 场景零影响）。见《战斗核心框架设计》表现挂起节。</summary>
+        public bool DeferPresentationEvents;
+
         /// <summary>行动点回复策略（可空=本战斗无回复）。</summary>
         public IRecoveryPolicy Recovery;
     }

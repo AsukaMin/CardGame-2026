@@ -12,7 +12,8 @@ namespace Battle
         AllUnits,          // 双方全体单位
         RandomEnemyUnit,   // 随机一个对方单位
         EnemyHero,         // 对方主战者
-        FriendlyHero       // 我方主战者
+        FriendlyHero,      // 我方主战者
+        Caster             // 施法者：部位卡效果=所属单位；效果卡=施法主战者（GAS 的 Caster 概念）
     }
 
     /// <summary>效果定义：目标选择 + 操作序列。数据驱动——新卡=新数据，不发版（板块划分文档硬要求）。</summary>
@@ -21,6 +22,9 @@ namespace Battle
     {
         public TargetMode Target = TargetMode.Chosen;
         public EffectOp[] Ops = Array.Empty<EffectOp>();
+
+        /// <summary>演出标记：true=该组属"动画后"——默认立即结算；表现挂起模式（DeferPresentationEvents）下等待 EntranceAnimDone 事件放行。</summary>
+        public bool PlayAfterAnimation;
     }
 
     /// <summary>效果操作基类：解释器按类型分发执行。</summary>
@@ -59,26 +63,46 @@ namespace Battle
         public int TurnCount = 1;
     }
 
-    /// <summary>条件分支：对每个已解析目标求值（条件以目标为中心），命中走 Then，否则走 Else。例："对半血以下敌人伤害翻倍"。</summary>
+    /// <summary>条件分支：条件按 ConditionTarget 指定的对象求值，命中走 Then，否则走 Else。例："对半血以下敌人伤害翻倍"。</summary>
     [Serializable]
     public sealed class ConditionalOp : EffectOp
     {
         public ConditionDef Condition;
+
+        /// <summary>条件求值对象：Current=被作用目标 / Caster=施法者 / MainTarget=技能主目标（命令传入）。</summary>
+        public ConditionTargetKind ConditionTarget = ConditionTargetKind.Current;
+
         public EffectOp[] Then = Array.Empty<EffectOp>();
         public EffectOp[] Else = Array.Empty<EffectOp>();
     }
 
-    /// <summary>条件基类（对目标求值）。</summary>
+    /// <summary>条件求值对象。</summary>
+    public enum ConditionTargetKind { Current, Caster, MainTarget }
+
+    /// <summary>条件基类。</summary>
     [Serializable]
     public abstract class ConditionDef { }
 
-    /// <summary>目标生命不高于百分比（含边界："半血以下"=0.5）。</summary>
+    /// <summary>属性比较条件：属性 × 运算符 × 比较值（固定数 / 百分比——基准=比较对象自身生命上限）。</summary>
     [Serializable]
-    public sealed class TargetHpBelowPercentCondition : ConditionDef { public double Percent = 0.5; }
+    public sealed class AttributeCompareCondition : ConditionDef
+    {
+        public ConditionAttr Attr = ConditionAttr.Hp;
+        public CompareOperator Op = CompareOperator.LessOrEqual;
+        public CompareValueType ValueType = CompareValueType.Fixed;
 
-    /// <summary>目标生命全满。</summary>
-    [Serializable]
-    public sealed class TargetIsFullHpCondition : ConditionDef { }
+        /// <summary>比较值：Fixed=绝对数值；PercentOfMaxHp=百分数（50 表示 50%）。</summary>
+        public double Value = 1;
+    }
+
+    /// <summary>可比较属性（主战者的攻击视为 0——主战者不攻击，既定规则）。</summary>
+    public enum ConditionAttr { Hp, MaxHp, Attack }
+
+    /// <summary>比较运算符。</summary>
+    public enum CompareOperator { Greater, GreaterOrEqual, Less, LessOrEqual, Equal, NotEqual }
+
+    /// <summary>比较值类型。</summary>
+    public enum CompareValueType { Fixed, PercentOfMaxHp }
 
     /// <summary>解析后的效果目标：单位或主战者（二选一）。主战者 Id 约定见 BattleSession。</summary>
     public readonly struct EffectTarget

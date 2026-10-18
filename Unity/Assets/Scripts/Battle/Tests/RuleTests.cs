@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GameEvents;
 using NUnit.Framework;
 
 namespace Battle.Tests
@@ -372,6 +373,91 @@ namespace Battle.Tests
             int playerHp = battle.PlayerHp;
             battle.EndTurn();
             Assert.AreEqual(playerHp - 4, battle.PlayerHp); // 重定向到玩家本人
+        }
+
+        // ---------- 召唤目标透传与表现挂起 ----------
+
+        [Test]
+        public void 召唤目标透传_入场效果命中指定敌人()
+        {
+            BattleSetup setup = BasicSetup(points: 10);
+            var chosenHit = new PartCardConfig
+            {
+                Id = 121, Name = "锁定毒腺", SlotType = SlotType.OnSummon, Cost = 2,
+                Effects = new[] { new EffectDef { Target = TargetMode.Chosen, Ops = new EffectOp[] { new DamageOp { Amount = 5 } } } },
+            };
+            setup.PlayerRoster.Add(SampleData.Build(
+                SampleData.Sleeve(216, "选目标型", new[] { SlotType.Body, SlotType.OnSummon }),
+                SampleData.Shell(), chosenHit));
+
+            BattleSession battle = new BattleSession(setup);
+            var victim = new BattleUnit { Id = 500, Owner = Side.Enemy, Name = "靶子", BaseMaxHp = 10, Hp = 10, Sleeve = SampleData.EnemyBruteSleeve() };
+            battle.Field.Add(victim);
+
+            Assert.IsTrue(battle.SummonMonster(1, 500).Success);
+            Assert.AreEqual(5, battle.Field.GetUnit(500).Hp); // 入场 Chosen 效果命中召唤指定的目标
+        }
+
+        [Test]
+        public void 表现挂起_等待入场动画事件放行()
+        {
+            GameEventBus.ClearAll();
+            BattleSetup setup = BasicSetup(points: 10);
+            setup.DeferPresentationEvents = true;
+            var delayed = new PartCardConfig
+            {
+                Id = 122, Name = "迟来一击", SlotType = SlotType.OnSummon, Cost = 2,
+                Effects = new[] { new EffectDef
+                {
+                    Target = TargetMode.Chosen, PlayAfterAnimation = true,
+                    Ops = new EffectOp[] { new DamageOp { Amount = 4 } },
+                } },
+            };
+            setup.PlayerRoster.Add(SampleData.Build(
+                SampleData.Sleeve(217, "延迟型", new[] { SlotType.Body, SlotType.OnSummon }),
+                SampleData.Shell(), delayed));
+
+            BattleSession battle = new BattleSession(setup);
+            var victim = new BattleUnit { Id = 500, Owner = Side.Enemy, Name = "靶子", BaseMaxHp = 10, Hp = 10, Sleeve = SampleData.EnemyBruteSleeve() };
+            battle.Field.Add(victim);
+
+            Assert.IsTrue(battle.SummonMonster(1, 500).Success);
+            Assert.AreEqual(10, battle.Field.GetUnit(500).Hp);        // 挂起未结算
+            Assert.AreEqual(1, battle.PendingDeferredCount);
+
+            int summonedUnitId = battle.Field.UnitsOf(Side.Player)[0].Id; // 场上先有注入的靶子，不能取 Units[0]
+            GameEventBus.Send(new EntranceAnimDone(summonedUnitId));  // 演出完成 → 放行
+            Assert.AreEqual(6, battle.Field.GetUnit(500).Hp);
+            Assert.AreEqual(0, battle.PendingDeferredCount);
+
+            battle.Dispose();
+            GameEventBus.ClearAll();
+        }
+
+        [Test]
+        public void 表现挂起_默认关闭时立即结算()
+        {
+            BattleSetup setup = BasicSetup(points: 10);
+            var delayed = new PartCardConfig
+            {
+                Id = 122, Name = "迟来一击", SlotType = SlotType.OnSummon, Cost = 2,
+                Effects = new[] { new EffectDef
+                {
+                    Target = TargetMode.Chosen, PlayAfterAnimation = true,
+                    Ops = new EffectOp[] { new DamageOp { Amount = 4 } },
+                } },
+            };
+            setup.PlayerRoster.Add(SampleData.Build(
+                SampleData.Sleeve(217, "延迟型", new[] { SlotType.Body, SlotType.OnSummon }),
+                SampleData.Shell(), delayed));
+
+            BattleSession battle = new BattleSession(setup); // 默认 DeferPresentationEvents=false
+            var victim = new BattleUnit { Id = 500, Owner = Side.Enemy, Name = "靶子", BaseMaxHp = 10, Hp = 10, Sleeve = SampleData.EnemyBruteSleeve() };
+            battle.Field.Add(victim);
+
+            Assert.IsTrue(battle.SummonMonster(1, 500).Success);
+            Assert.AreEqual(6, battle.Field.GetUnit(500).Hp); // 未开启挂起模式：标记组照常立即结算
+            Assert.AreEqual(0, battle.PendingDeferredCount);
         }
     }
 }

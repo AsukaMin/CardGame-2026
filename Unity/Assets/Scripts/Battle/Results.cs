@@ -40,6 +40,8 @@ namespace Battle
         public int PlayerHp, PlayerMaxHp, EnemyHp, EnemyMaxHp;
         public int ActionPoints;
         public int DeckCount, HandCount, GraveyardPackageCount;
+        /// <summary>表现挂起模式下等待演出放行的效果组数量（UI 据此显示"演出进行中"）。</summary>
+        public int PendingDeferredCount;
         public List<UnitView> Units = new List<UnitView>();
         public List<HandCardView> Hand = new List<HandCardView>();
         public List<RosterView> Roster = new List<RosterView>();

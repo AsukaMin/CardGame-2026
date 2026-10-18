@@ -192,7 +192,13 @@ namespace Battle.Tests
                             {
                                 new ConditionalOp
                                 {
-                                    Condition = new TargetHpBelowPercentCondition { Percent = 0.5 },
+                                    Condition = new AttributeCompareCondition
+                                    {
+                                        Attr = ConditionAttr.Hp,
+                                        Op = CompareOperator.LessOrEqual,
+                                        ValueType = CompareValueType.PercentOfMaxHp,
+                                        Value = 50,
+                                    },
                                     Then = new EffectOp[] { new DamageOp { Amount = 6 } },
                                     Else = new EffectOp[] { new DamageOp { Amount = 3 } },
                                 },

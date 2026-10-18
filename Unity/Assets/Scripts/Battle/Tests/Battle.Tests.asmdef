@@ -3,6 +3,7 @@
     "rootNamespace": "Battle.Tests",
     "references": [
         "Battle",
+        "GameEvents",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],
