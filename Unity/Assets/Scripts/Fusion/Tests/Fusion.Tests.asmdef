@@ -3,6 +3,7 @@
     "rootNamespace": "Fusion.Tests",
     "references": [
         "Fusion",
+        "Battle",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

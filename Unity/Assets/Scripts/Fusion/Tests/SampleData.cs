@@ -1,8 +1,9 @@
 using System;
+using Battle;
 
 namespace Fusion.Tests
 {
-    /// <summary>示例卡池：覆盖各槽型部位卡与公式变体（测试数据形状 = 未来导表 JSON 的形状）。</summary>
+    /// <summary>示例卡池：覆盖各槽型部位与公式变体（测试数据形状 = 未来导表 JSON 的形状）。</summary>
     public static class SampleData
     {
         // ---------- 部位卡 ----------
@@ -25,11 +26,11 @@ namespace Fusion.Tests
             Id = 103, Name = "心脏", SlotType = SlotType.Body, Cost = 2, Attack = 2, MaxHp = 3,
         };
 
-        /// <summary>嘲讽甲壳：身材 0/5，2 费，附带嘲讽关键词。</summary>
+        /// <summary>嘲讽甲壳：身材 0/5，2 费，随召唤授予嘲讽标签。</summary>
         public static PartCardConfig TauntCarapace() => new PartCardConfig
         {
             Id = 104, Name = "嘲讽甲壳", SlotType = SlotType.Body, Cost = 2, Attack = 0, MaxHp = 5,
-            GrantKeywords = Keywords.Taunt,
+            GrantTags = new[] { "Keyword.Taunt" },
         };
 
         /// <summary>毒腺：入场——对随机敌方单位造成 2 伤害，2 费。</summary>
@@ -38,26 +39,57 @@ namespace Fusion.Tests
             Id = 111, Name = "毒腺", SlotType = SlotType.OnSummon, Cost = 2,
             Effects = new[]
             {
-                new EffectDef
+                new EffectGroupDef
                 {
-                    Target = TargetMode.RandomEnemyUnit,
-                    Ops = new EffectOp[] { new DamageOp { Amount = 2 } },
+                    Target = TargetMode.RandomOpposingUnit,
+                    Ops = new EffectOp[] { new DamageOp { Amount = ScopedValue.Const(2) } },
                 },
             },
         };
 
-        /// <summary>战鼓：常驻——我方全体单位攻击 +1，3 费。</summary>
+        /// <summary>战鼓：常驻光环——我方全体单位攻击 +1（挂上时施加的持续效果），3 费。</summary>
         public static PartCardConfig WarDrum() => new PartCardConfig
         {
             Id = 112, Name = "战鼓", SlotType = SlotType.Continuous, Cost = 3,
-            Effects = new[]
+            Auras = new[]
             {
-                new EffectDef
+                new GameplayEffectDef
                 {
-                    Target = TargetMode.AllFriendlyUnits,
-                    Ops = new EffectOp[]
+                    Name = "战鼓光环",
+                    Duration = EffectDurationKind.Permanent,
+                    Modifiers = new[]
                     {
-                        new ModifyStatOp { Stat = StatType.Attack, Amount = 1, Duration = ModifierDurationKind.Fusion },
+                        new AttributeModifierDef
+                        {
+                            Attribute = AttributeId.Attack, Op = ModOp.Add,
+                            Magnitude = ScopedValue.Const(1),
+                        },
+                    },
+                },
+            },
+        };
+
+        /// <summary>战意：常驻触发——每回合开始（宿主喂养 Event.Turn.Started）自身攻击 +1，1 费。</summary>
+        public static PartCardConfig WarHeart() => new PartCardConfig
+        {
+            Id = 114, Name = "战意", SlotType = SlotType.Continuous, Cost = 1,
+            Triggers = new[]
+            {
+                new TriggerDef
+                {
+                    EventTag = "Event.Turn.Started",
+                    Effects = new EffectGroupDef
+                    {
+                        Target = TargetMode.Self,
+                        Ops = new EffectOp[]
+                        {
+                            new ModifyAttributeOp
+                            {
+                                Attribute = AttributeId.Attack, Op = ModOp.Add,
+                                Magnitude = ScopedValue.Const(1),
+                                Duration = EffectDurationKind.Permanent,
+                            },
+                        },
                     },
                 },
             },
@@ -69,10 +101,10 @@ namespace Fusion.Tests
             Id = 113, Name = "怨念", SlotType = SlotType.OnLeave, Cost = 1, Consumable = true,
             Effects = new[]
             {
-                new EffectDef
+                new EffectGroupDef
                 {
-                    Target = TargetMode.EnemyHero,
-                    Ops = new EffectOp[] { new DamageOp { Amount = 3 } },
+                    Target = TargetMode.OpposingLeader,
+                    Ops = new EffectOp[] { new DamageOp { Amount = ScopedValue.Const(3) } },
                 },
             },
         };
@@ -84,9 +116,7 @@ namespace Fusion.Tests
             int id, string name, SlotType[] slots, double costMult = 1.0, int costFlat = 0, double statMult = 1.0) =>
             new MonsterCardConfig
             {
-                Id = id,
-                Name = name,
-                Slots = slots,
+                Id = id, Name = name, Slots = slots,
                 Cost = new CostFormula { Multiplier = costMult, Flat = costFlat },
                 StatMultiplier = statMult,
             };
@@ -100,7 +130,7 @@ namespace Fusion.Tests
             Sleeve(202, "豪华熔核体", new[] { SlotType.Body, SlotType.Body, SlotType.Continuous },
                 costMult: 1.3, statMult: 1.3);
 
-        /// <summary>便捷装槽：按槽型找第一个空槽装入。</summary>
+        /// <summary>便捷装槽：按槽型找第一个空槽装入（经 Install 走完整校验——矩阵违例在组卡期即抛）。</summary>
         public static MonsterSleeve Build(MonsterCardConfig config, params PartCardConfig[] parts)
         {
             MonsterSleeve sleeve = new MonsterSleeve(config);
@@ -111,7 +141,7 @@ namespace Fusion.Tests
                 {
                     if (config.Slots[i] == part.SlotType && sleeve.Installed[i] == null)
                     {
-                        sleeve.Installed[i] = part;
+                        sleeve.Install(i, part);
                         placed = true;
                         break;
                     }

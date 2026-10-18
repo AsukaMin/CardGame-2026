@@ -19,7 +19,7 @@ namespace Fusion
             Installed = new PartCardConfig[config.Slots.Length];
         }
 
-        /// <summary>装入部位卡（整备期最小 API）：槽型必须匹配、槽必须为空。</summary>
+        /// <summary>装入部位卡（整备期最小 API）：槽型必须匹配、槽必须为空、内容须符合槽型×内容矩阵。</summary>
         public void Install(int slotIndex, PartCardConfig part)
         {
             if (slotIndex < 0 || slotIndex >= Installed.Length)
@@ -27,11 +27,36 @@ namespace Fusion
             if (part == null) throw new ArgumentNullException(nameof(part));
             if (Installed[slotIndex] != null)
                 throw new InvalidOperationException($"卡套[{Config.Name}]槽 {slotIndex} 已占用");
-            if (part.SlotType != Config.Slots[slotIndex])
+            SlotType slot = Config.Slots[slotIndex];
+            if (part.SlotType != slot)
                 throw new InvalidOperationException(
-                    $"部位卡[{part.Name}]槽型 {part.SlotType} 与槽位类型 {Config.Slots[slotIndex]} 不匹配");
+                    $"部位卡[{part.Name}]槽型 {part.SlotType} 与槽位类型 {slot} 不匹配");
+            ValidateContentMatrix(slot, part);
             Installed[slotIndex] = part;
         }
+
+        /// <summary>槽型×内容合法性矩阵（文档 §4）：身材槽纯身材；效果槽只带 Effects；常驻槽只带 Triggers/Auras。数据配置错误在装配期暴露。</summary>
+        static void ValidateContentMatrix(SlotType slot, PartCardConfig part)
+        {
+            bool hasBody = part.Attack != 0 || part.MaxHp != 0;
+            bool hasEffects = HasContent(part.Effects);
+            bool hasContinuous = HasContent(part.Triggers) || HasContent(part.Auras);
+
+            if (slot == SlotType.Body && (hasEffects || hasContinuous))
+                throw new InvalidOperationException(
+                    $"身材槽部位卡[{part.Name}]不得携带行为载荷（Effects/Triggers/Auras）");
+            if (slot != SlotType.Body && hasBody)
+                throw new InvalidOperationException(
+                    $"效果槽/常驻槽部位卡[{part.Name}]不得携带身材数值（Attack/MaxHp）");
+            if (slot == SlotType.Continuous && hasEffects)
+                throw new InvalidOperationException(
+                    $"常驻槽部位卡[{part.Name}]的行为应走 Triggers/Auras，不用 Effects（槽型不路由）");
+            if ((slot == SlotType.OnSummon || slot == SlotType.OnLeave) && hasContinuous)
+                throw new InvalidOperationException(
+                    $"效果槽部位卡[{part.Name}]不得携带 Triggers/Auras（入场/离场由槽型路由）");
+        }
+
+        static bool HasContent<T>(T[] array) => array != null && array.Length > 0;
 
         /// <summary>防御性校验：至少一张身材槽部位卡（整备阶段应已保证）。</summary>
         public void Validate()

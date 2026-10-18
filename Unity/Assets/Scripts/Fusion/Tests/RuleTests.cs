@@ -80,6 +80,36 @@ namespace Fusion.Tests
         }
 
         [Test]
+        public void 装槽_内容矩阵违例则拒绝()
+        {
+            // 身材槽部位不得带行为载荷
+            PartCardConfig bodyWithBehavior = new PartCardConfig
+            {
+                Id = 120, Name = "错位爪", SlotType = SlotType.Body, Cost = 1, Attack = 2, MaxHp = 2,
+                Effects = new[] { new Battle.EffectGroupDef() },
+            };
+            MonsterSleeve s1 = new MonsterSleeve(SampleData.Sleeve(219, "单身槽", new[] { SlotType.Body }));
+            Assert.Throws<InvalidOperationException>(() => s1.Install(0, bodyWithBehavior));
+
+            // 效果槽部位不得带身材数值
+            PartCardConfig effectWithBody = new PartCardConfig
+            {
+                Id = 121, Name = "带肉的毒腺", SlotType = SlotType.OnSummon, Cost = 1, Attack = 1,
+            };
+            MonsterSleeve s2 = new MonsterSleeve(SampleData.Sleeve(220, "入槽", new[] { SlotType.OnSummon }));
+            Assert.Throws<InvalidOperationException>(() => s2.Install(0, effectWithBody));
+
+            // 常驻槽部位的行为应走 Triggers/Auras，不用 Effects
+            PartCardConfig continuousWithEffects = new PartCardConfig
+            {
+                Id = 122, Name = "走错门的战鼓", SlotType = SlotType.Continuous, Cost = 1,
+                Effects = new[] { new Battle.EffectGroupDef() },
+            };
+            MonsterSleeve s3 = new MonsterSleeve(SampleData.Sleeve(221, "常驻槽", new[] { SlotType.Continuous }));
+            Assert.Throws<InvalidOperationException>(() => s3.Install(0, continuousWithEffects));
+        }
+
+        [Test]
         public void 防御性校验_缺身材部位则拒绝()
         {
             MonsterSleeve bad = SampleData.Build(

@@ -1,7 +1,11 @@
 using System;
+using Battle;
 
 namespace Fusion
 {
+    /// <summary>卡槽四型：身材/入场/常驻/离场。</summary>
+    public enum SlotType { Body, OnSummon, Continuous, OnLeave }
+
     /// <summary>消耗公式：召唤费 = max(0, round(Σ部位卡费 × Multiplier) + Flat)。例：75% → (0.75, 0)；-2 总耗 → (1.0, -2)。</summary>
     [Serializable]
     public class CostFormula
@@ -24,7 +28,10 @@ namespace Fusion
         public double StatMultiplier = 1.0;
     }
 
-    /// <summary>部位卡配置：身材槽部位卡纯身材；效果槽部位卡携带行为（槽型即声明，v2.1 定案）。</summary>
+    /// <summary>
+    /// 部位卡配置：身材槽部位卡纯身材；效果槽部位卡携带行为（槽型即声明，v2.1 定案）。
+    /// 行为载荷类型与语义见《技能系统设计》——常驻槽 = Auras（静态光环）+ Triggers（事件触发行为）并存。
+    /// </summary>
     [Serializable]
     public class PartCardConfig
     {
@@ -34,15 +41,19 @@ namespace Fusion
         public SlotType SlotType = SlotType.Body;
         /// <summary>写死的费用（槽内卡不充能，召唤时一次付清）。</summary>
         public int Cost;
-        /// <summary>攻击底数（仅身材槽有意义）。</summary>
+        /// <summary>攻击底数（仅身材槽合法，装槽时校验）。</summary>
         public int Attack;
-        /// <summary>生命底数（仅身材槽有意义）。</summary>
+        /// <summary>生命底数（仅身材槽合法）。</summary>
         public int MaxHp;
-        /// <summary>行为效果（仅效果槽有意义；触发时机由槽型决定）。</summary>
-        public EffectDef[] Effects;
-        /// <summary>随召唤赋予的关键词（如嘲讽甲壳）。</summary>
-        public Keywords GrantKeywords = Keywords.None;
-        /// <summary>消耗标记：单位死亡时随包销毁，战后不回收。</summary>
+        /// <summary>行为效果组（仅 OnSummon/OnLeave 槽合法；触发时机由槽型路由：召唤时/死亡时）。</summary>
+        public EffectGroupDef[] Effects;
+        /// <summary>事件触发行为（仅常驻槽合法——"受伤反弹/攻击后成长"类）。</summary>
+        public TriggerDef[] Triggers;
+        /// <summary>静态光环（仅常驻槽合法——挂上时施加的持续效果定义）。</summary>
+        public GameplayEffectDef[] Auras;
+        /// <summary>随召唤授予宿主单位的标签名（如 "Keyword.Taunt"）。</summary>
+        public string[] GrantTags;
+        /// <summary>消耗标记：单位死亡时随包销毁，战后不回收（宿主战斗核心消费）。</summary>
         public bool Consumable;
     }
 }

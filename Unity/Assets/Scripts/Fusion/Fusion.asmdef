@@ -1,7 +1,9 @@
 {
     "name": "Fusion",
     "rootNamespace": "Fusion",
-    "references": [],
+    "references": [
+        "Battle"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
