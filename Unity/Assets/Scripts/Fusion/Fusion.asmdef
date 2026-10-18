@@ -1,9 +1,7 @@
 {
-    "name": "Battle",
-    "rootNamespace": "Battle",
-    "references": [
-        "GameEvents"
-    ],
+    "name": "Fusion",
+    "rootNamespace": "Fusion",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

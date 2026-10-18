@@ -1,6 +1,6 @@
 # 单机卡牌游戏：简化版 UI 框架设计
 
-> 整理自 2026-10-13 讨论，接续《单机卡牌对战游戏-板块划分与离线补丁方案》。结论：单机卡牌不上 ET 框架，用"纯 C# 战斗核心 + 简化版 UI 管理 + JSON 配置"三件套；本文是其中 UI 层的完整设计。
+> 整理自 2026-10-13 讨论，接续《单机卡牌对战游戏-板块划分与离线补丁方案》。结论：单机卡牌不上 ET 框架，用"纯 C# 融合核心 + 简化版 UI 管理 + JSON 配置"三件套；本文是其中 UI 层的完整设计。
 
 ## 一、为什么不用 ET
 
@@ -121,7 +121,7 @@ public class UIManager : MonoBehaviour
 ```csharp
 public class UIParam
 {
-    public string OpenType;   // "Edit" / "View" / "BattleResult"……
+    public string OpenType;   // "Edit" / "View" / "Shop"……
     readonly Dictionary<string, object> map = new Dictionary<string, object>();
 
     public void Set(string key, object value) { map[key] = value; }
@@ -144,68 +144,59 @@ UIManager.I.Show("DeckWindow", p);
 
 | 方向 | 通道 | 原则 |
 |---|---|---|
-| 战斗 → UI（"发生了什么"） | C# event 广播 | 事件只报事实，过去时态，不关心谁在听 |
-| UI → 战斗（"我要做什么"） | **直接调方法**，不走事件 | 要返回值、要失败原因 |
+| 逻辑核心 → UI（"发生了什么"） | C# event 广播 | 事件只报事实，过去时态，不关心谁在听 |
+| UI → 逻辑核心（"我要做什么"） | **直接调方法**，不走事件 | 要返回值、要失败原因 |
 | UI ↔ UI（窗口间） | 一次性应答用**回调**；全局广播才用事件 | 大多数"窗口间通信"是父子对话 |
 
-### 1. 战斗 → UI：事件广播
+### 1. 逻辑核心 → UI：事件广播
+
+（示例用局外货币域 MetaEvents；战斗域事件类待战斗核心重写后照此模式建立。）
 
 ```csharp
-// BattleEvents.cs —— 战斗核心唯一对外的"嘴"
-public static class BattleEvents
+// MetaEvents.cs —— 局外域唯一对外的"嘴"
+public static class MetaEvents
 {
-    public static event Action<int, int> OnHpChanged;        // (单位Id, 新血量)
-    public static event Action<int> OnCardDrawn;             // 卡牌实例Id
-    public static event Action<int> OnCardPlayed;
-    public static event Action<int> OnUnitDied;
-    public static event Action<BattleResult> OnBattleEnd;
-    public static event Action<int> OnTurnStart;             // 回合数
+    public static event Action<int> OnCoinsChanged;     // (新货币数)
+    public static event Action<int> OnCardUnlocked;     // 卡牌Id
 }
 ```
 
-战斗核心只管发，不知道有没有 UI 在听：
+逻辑核心只管发，不知道有没有 UI 在听：
 
 ```csharp
-void ApplyDamage(Unit unit, int amount)
+void AddCoins(int amount)
 {
-    unit.Hp = Math.Max(0, unit.Hp - amount);
-    BattleEvents.OnHpChanged?.Invoke(unit.Id, unit.Hp);   // ?. 判空：没 UI 也照常跑
-    if (unit.Hp == 0)
-    {
-        BattleEvents.OnUnitDied?.Invoke(unit.Id);
-        // 死亡结算……
-    }
+    coins += amount;
+    MetaEvents.OnCoinsChanged?.Invoke(coins);   // ?. 判空：没 UI 也照常跑
 }
 ```
 
 UI 侧**铁律：OnShow 订阅、OnHide 退订，永远成对**；且订阅后立刻按当前状态全量刷新一次（晚开窗会错过历史事件）：
 
 ```csharp
-public class BattleWindow : UIWindow
+public class ShopWindow : UIWindow
 {
-    void RefreshHp(int unitId, int hp) => GetText("hp").text = hp.ToString(); // 控件来自序列化引用表
+    void RefreshCoins(int coins) => GetText("coins").text = coins.ToString(); // 控件来自序列化引用表
 
     public override void OnShow(UIParam p)
     {
-        BattleEvents.OnHpChanged += RefreshHp;
-        BattleEvents.OnBattleEnd += OnBattleEnd;
+        MetaEvents.OnCoinsChanged += RefreshCoins;
         RefreshAll();   // 订阅后立刻全量刷，否则界面是错的
     }
 
     public override void OnHide()
     {
-        BattleEvents.OnHpChanged -= RefreshHp;
-        BattleEvents.OnBattleEnd -= OnBattleEnd;
+        MetaEvents.OnCoinsChanged -= RefreshCoins;
     }
 }
 ```
 
-### 2. UI → 战斗：直接调用
+### 2. UI → 逻辑核心：直接调用
 
 ```csharp
-public void OnCardClicked(int handIndex)
+public void OnBuyClicked(int itemId)
 {
-    PlayResult r = battle.PlayCard(handIndex);
+    BuyResult r = shop.Buy(itemId);   // 逻辑核心的命令方法：要返回值、要失败原因
     if (!r.Success)
         ShowTip(r.Error);
 }
@@ -248,24 +239,24 @@ UIManager.I.Show("CardPickWindow", p);
 ## 五、两个要防的坑
 
 1. **过期订阅**：窗口缓存不销毁时配对订阅/退订不会出事；若改成"关闭即 Destroy"，忘退订的窗口就是悬空引用，下一发事件就 NRE。OnShow 加几行 +=，OnHide 就得有几行 -=。
-2. **静态事件跨场残留**：回主菜单重开一局时，上一局订阅者没退干净会收到新战斗事件。第 1 条做到即自动成立；再保险可在战斗重开时发 `OnBattleReset` 让漏网窗口自刷。
+2. **静态事件跨场残留**：回主菜单重开一局时，上一局订阅者没退干净会收到新一局的事件。第 1 条做到即自动成立；再保险可在重开局时发 `OnRunReset` 之类的重置事件让漏网窗口自刷。
 
 ## 六、规模化整理
 
 事件多了按业务域拆文件，**不换机制**：
 
 ```csharp
-BattleEvents.cs   // 战斗内：掉血、抽牌、回合
+BattleEvents.cs   // 战斗域（重写后重建）：掉血、抽牌、回合
 MetaEvents.cs     // 局外：货币、卡牌解锁、卡组保存
 UiEvents.cs       // UI 自己的事：弹窗关闭、红点变化
 ```
 
 **不要**写字符串/Type 当 key 的反射式 EventBus——事件名拼错编译器不报错，那是 ET 为大型项目付的灵活性代价。三五个静态类、编译期全检查，单机卡牌绰绰有余。
 
-> 【2026-10-17 修订】跨模块的**全局事件系统**已立项（表现层→战斗核心的演出时序回调等场景）：采用 **struct 事件 + 泛型订阅**（类型即键，编译期全检），与上文三分域静态事件**共存不迁移**。禁令精神不变（禁字符串/反射键），形态与纪律见《单机卡牌游戏-事件系统设计》。
+> 【2026-10-17 修订，2026-10-18 更新】跨模块的**全局事件系统**（GameEventBus：**struct 事件 + 泛型订阅**，类型即键，编译期全检）与各域静态事件**共存不迁移**；原首个使用场景（表现层→融合核心的演出时序回调）已随战斗重构移除，待战斗重写后重建。禁令精神不变（禁字符串/反射键），形态与纪律见《单机卡牌游戏-事件系统设计》。
 
 ## 七、收拢
 
-> **战斗对 UI 只有事件（说事实），UI 对战斗只有方法（下命令），窗口对窗口先考虑回调（父子对话），事件只留给"多个窗口共同关心的一件事"。**
+> **逻辑核心对 UI 只有事件（说事实），UI 对逻辑核心只有方法（下命令），窗口对窗口先考虑回调（父子对话），事件只留给"多个窗口共同关心的一件事"。**
 
 整套 UI 框架两三百行：一个管理器 + 一个窗口基类 + 一个参数包 + 几个静态事件类。没有反射、没有运行时查找、没有异步链，复杂度全部留给卡牌玩法本身。

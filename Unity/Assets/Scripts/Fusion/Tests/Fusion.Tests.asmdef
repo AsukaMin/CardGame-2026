@@ -1,9 +1,8 @@
 {
-    "name": "Battle.Tests",
-    "rootNamespace": "Battle.Tests",
+    "name": "Fusion.Tests",
+    "rootNamespace": "Fusion.Tests",
     "references": [
-        "Battle",
-        "GameEvents",
+        "Fusion",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

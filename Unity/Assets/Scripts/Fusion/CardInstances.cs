@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
 
-namespace Battle
+namespace Fusion
 {
-    /// <summary>名单中一个卡套的战斗内状态（每张每场限召一次）。</summary>
-    public enum RosterStatus { Available, OnField, Dead }
-
     /// <summary>
     /// 怪兽卡套运行时实例：配置 + 已装入的部位卡。
     /// 装槽合法性（槽型匹配、≥1 身材槽部位卡）由整备阶段保证，这里只提供最小装入 API 与防御性校验（v2.1 定案）。

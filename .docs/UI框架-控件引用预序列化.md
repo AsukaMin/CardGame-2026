@@ -33,20 +33,20 @@ key 规则：字母/数字/下划线（其他字符在右键改名时归一化�
 ## 三、代码用法
 
 ```csharp
-public class BattleWindow : UIWindow
+public class ShopWindow : UIWindow
 {
     public override void OnCreate(UIParam p)
     {
         // 按钮注册放 OnCreate：窗口缓存复用，只需注册一次
-        GetButton("endTurn").onClick.AddListener(OnEndTurnClicked);
+        GetButton("buy").onClick.AddListener(OnBuyClicked);
     }
 
-    void OnEndTurnClicked() { /* ... */ }
+    void OnBuyClicked() { /* ... */ }
 
-    void RefreshHp(int hp)
+    void RefreshCoins(int coins)
     {
-        GetText("hp").text = hp.ToString();
-        GetImage("hpBar").fillAmount = hp / 100f;
+        GetText("coins").text = coins.ToString();
+        GetImage("coinsBar").fillAmount = coins / 100f;
     }
 }
 ```

@@ -1,6 +1,6 @@
 using System;
 
-namespace Battle
+namespace Fusion
 {
     /// <summary>目标选择模式（相对效果来源阵营）。</summary>
     public enum TargetMode
@@ -23,7 +23,7 @@ namespace Battle
         public TargetMode Target = TargetMode.Chosen;
         public EffectOp[] Ops = Array.Empty<EffectOp>();
 
-        /// <summary>演出标记：true=该组属"动画后"——默认立即结算；表现挂起模式（DeferPresentationEvents）下等待 EntranceAnimDone 事件放行。</summary>
+        /// <summary>演出标记：true=该组属"动画后"结算——结算节拍由表现层与未来战斗核心协商（原 DeferPresentationEvents/EntranceAnimDone 机制随战斗代码移除，重写时再定端口）。</summary>
         public bool PlayAfterAnimation;
     }
 
@@ -41,7 +41,7 @@ namespace Battle
     {
         public StatType Stat;
         public int Amount;
-        public ModifierDurationKind Duration = ModifierDurationKind.Battle;
+        public ModifierDurationKind Duration = ModifierDurationKind.Fusion;
         /// <summary>Duration==Turns 时的持续轮数。</summary>
         public int TurnCount = 1;
     }
@@ -59,7 +59,7 @@ namespace Battle
     public sealed class GrantKeywordOp : EffectOp
     {
         public Keywords Keyword = Keywords.Taunt;
-        public ModifierDurationKind Duration = ModifierDurationKind.Battle;
+        public ModifierDurationKind Duration = ModifierDurationKind.Fusion;
         public int TurnCount = 1;
     }
 
@@ -103,19 +103,4 @@ namespace Battle
 
     /// <summary>比较值类型。</summary>
     public enum CompareValueType { Fixed, PercentOfMaxHp }
-
-    /// <summary>解析后的效果目标：单位或主战者（二选一）。主战者 Id 约定见 BattleSession。</summary>
-    public readonly struct EffectTarget
-    {
-        public readonly BattleUnit Unit;
-        public readonly Side HeroSide;
-
-        public EffectTarget(BattleUnit unit) { Unit = unit; HeroSide = default; }
-        public EffectTarget(Side heroSide) { Unit = null; HeroSide = heroSide; }
-
-        public bool IsUnit => Unit != null;
-        public int Id => Unit != null
-            ? Unit.Id
-            : (HeroSide == Side.Player ? BattleSession.PlayerHeroId : BattleSession.EnemyHeroId);
-    }
 }

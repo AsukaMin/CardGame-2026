@@ -10,7 +10,7 @@ using System.Collections.Generic;
 /// </summary>
 public class UIParam
 {
-    public string OpenType; // "Edit" / "View" / "BattleResult"……
+    public string OpenType; // "Edit" / "View" / "Shop"……
 
     readonly Dictionary<string, object> map = new Dictionary<string, object>();
 

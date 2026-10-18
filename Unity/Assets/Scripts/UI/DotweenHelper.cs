@@ -171,7 +171,7 @@ public static class DotweenHelper
     /// <summary>
     /// 通用飘字：在 parent（Canvas 内任意 RectTransform）下纯代码建一个临时 TMP 文本，
     /// 原地上浮+淡出后自毁，不依赖预制体。anchoredPos 是相对 parent 的锚点坐标。
-    /// 战斗世界空间的飘字（头顶血条那种）等表现层设计时再扩展。
+    /// 战斗世界空间的飘字（头顶血条那种）等战斗核心重写后再扩展。
     /// </summary>
     public static Tween FloatText(Transform parent, Vector2 anchoredPos, string content,
                                   Color? color = null, float duration = 0.8f, float fontSize = 36f)

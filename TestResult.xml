@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" name="FusionSmoke.dll" fullname="F:/Unity_Projects/CardGame/.zcode/tmp/FusionSmoke/bin/Debug/net9.0/FusionSmoke.dll" testcasecount="5" result="Passed" start-time="2026-10-18T10:01:37.5438731Z" end-time="2026-10-18T10:01:37.7099084Z" duration="0.165962" total="5" passed="5" failed="0" inconclusive="0" skipped="0" warnings="0" asserts="13" random-seed="364150935">
+  <command-line><![CDATA[F:\Unity_Projects\CardGame\.zcode\tmp\FusionSmoke\bin\Debug\net9.0\FusionSmoke.dll]]></command-line>
+  <filter />
+  <test-suite type="Assembly" id="1006" name="FusionSmoke.dll" fullname="F:/Unity_Projects/CardGame/.zcode/tmp/FusionSmoke/bin/Debug/net9.0/FusionSmoke.dll" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-18T10:01:37.5438731Z" end-time="2026-10-18T10:01:37.7099084Z" duration="0.165962" total="5" passed="5" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="13">
+    <environment framework-version="3.14.0.0" clr-version="9.0.2" os-version="Microsoft Windows 10.0.19044" platform="Win32NT" cwd="F:\Unity_Projects\CardGame" machine-name="DESKTOP-B3FGHMG" user="Minato" user-domain="DESKTOP-B3FGHMG" culture="zh-CN" uiculture="zh-CN" os-architecture="x64" />
+    <settings>
+      <setting name="WorkDirectory" value="F:\Unity_Projects\CardGame" />
+      <setting name="NumberOfTestWorkers" value="8" />
+    </settings>
+    <properties>
+      <property name="_PID" value="1868" />
+      <property name="_APPDOMAIN" value="FusionSmoke" />
+    </properties>
+    <test-suite type="TestSuite" id="1007" name="Fusion" fullname="Fusion" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-18T10:01:37.5596701Z" end-time="2026-10-18T10:01:37.7098931Z" duration="0.150222" total="5" passed="5" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="13">
+      <test-suite type="TestSuite" id="1008" name="Tests" fullname="Fusion.Tests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-18T10:01:37.5603637Z" end-time="2026-10-18T10:01:37.7098331Z" duration="0.149470" total="5" passed="5" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="13">
+        <test-suite type="TestFixture" id="1000" name="RuleTests" fullname="Fusion.Tests.RuleTests" classname="Fusion.Tests.RuleTests" runstate="Runnable" testcasecount="5" result="Passed" start-time="2026-10-18T10:01:37.5634161Z" end-time="2026-10-18T10:01:37.7091954Z" duration="0.145780" total="5" passed="5" failed="0" warnings="0" inconclusive="0" skipped="0" asserts="13">
+          <test-case id="1005" name="防御性校验_缺身材部位则拒绝" fullname="Fusion.Tests.RuleTests.防御性校验_缺身材部位则拒绝" methodname="防御性校验_缺身材部位则拒绝" classname="Fusion.Tests.RuleTests" runstate="Runnable" seed="1908046985" result="Passed" start-time="2026-10-18T10:01:37.5719515Z" end-time="2026-10-18T10:01:37.6323404Z" duration="0.064689" asserts="1" />
+          <test-case id="1003" name="身材_求和后乘系数" fullname="Fusion.Tests.RuleTests.身材_求和后乘系数" methodname="身材_求和后乘系数" classname="Fusion.Tests.RuleTests" runstate="Runnable" seed="958439912" result="Passed" start-time="2026-10-18T10:01:37.6410390Z" end-time="2026-10-18T10:01:37.6822953Z" duration="0.041257" asserts="4" />
+          <test-case id="1001" name="召唤费_乘数定值与下限" fullname="Fusion.Tests.RuleTests.召唤费_乘数定值与下限" methodname="召唤费_乘数定值与下限" classname="Fusion.Tests.RuleTests" runstate="Runnable" seed="1087687930" result="Passed" start-time="2026-10-18T10:01:37.6823823Z" end-time="2026-10-18T10:01:37.6897134Z" duration="0.007361" asserts="4" />
+          <test-case id="1002" name="召唤费_先乘后加_四舍五入" fullname="Fusion.Tests.RuleTests.召唤费_先乘后加_四舍五入" methodname="召唤费_先乘后加_四舍五入" classname="Fusion.Tests.RuleTests" runstate="Runnable" seed="152638643" result="Passed" start-time="2026-10-18T10:01:37.6903971Z" end-time="2026-10-18T10:01:37.6909148Z" duration="0.000517" asserts="1" />
+          <test-case id="1004" name="装槽_槽型不匹配与槽位占用则拒绝" fullname="Fusion.Tests.RuleTests.装槽_槽型不匹配与槽位占用则拒绝" methodname="装槽_槽型不匹配与槽位占用则拒绝" classname="Fusion.Tests.RuleTests" runstate="Runnable" seed="1140513489" result="Passed" start-time="2026-10-18T10:01:37.6910171Z" end-time="2026-10-18T10:01:37.7059974Z" duration="0.014981" asserts="3" />
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

@@ -52,7 +52,7 @@ namespace GameEvents
             }
         }
 
-        /// <summary>清空全部订阅。仅测试/战斗重置用，业务代码禁调。</summary>
+        /// <summary>清空全部订阅。仅测试用，业务代码禁调。</summary>
         public static void ClearAll() => handlers.Clear();
     }
 }
