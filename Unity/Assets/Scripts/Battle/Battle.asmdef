@@ -1,7 +1,9 @@
 {
     "name": "Battle",
     "rootNamespace": "Battle",
-    "references": [],
+    "references": [
+        "GameEvents"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
