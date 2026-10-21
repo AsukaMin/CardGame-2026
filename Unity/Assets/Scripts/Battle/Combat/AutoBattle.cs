@@ -76,8 +76,9 @@ namespace Battle
             for (int i = 0; i < board.Count && !session.IsBattleOver; i++)
                 session.Attack(board[i].Id, session.EnemyLeader.Id);
 
-            // 4. 结束回合（敌方回合在返回前同步执行完）
-            session.EndTurn();
+            // 4. 结束回合（本回合攻击已致终局则无需再结束）
+            if (!session.IsBattleOver)
+                session.EndTurn();
         }
     }
 
@@ -134,7 +135,7 @@ namespace Battle
         public static MonsterCardDef Ogre() =>
             new MonsterCardDef { Name = "食人魔", Cost = 0, Attack = 4, MaxHp = 5 };
 
-        /// <summary>默认演示对局（30 对 30，玩家 12 张混合牌库，敌方依序召唤 小鬼×2 → 食人魔×2）。</summary>
+        /// <summary>默认演示对局（30 对 30，玩家 12 张混合牌库，敌方依序召唤 小鬼×2 → 食人魔）。</summary>
         public static BattleSetup CreateSetup(int seed = 0)
         {
             BattleSetup setup = new BattleSetup
@@ -143,7 +144,7 @@ namespace Battle
                 EnemyHp = 30,
                 InitialEnergy = 2,
                 RandomSeed = seed,
-                EnemySummons = { Imp(), Imp(), Ogre(), Ogre() },
+                EnemySummons = { Imp(), Imp(), Ogre() },
             };
             setup.Deck.AddRange(new BattleCard[]
             {

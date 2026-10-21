@@ -29,12 +29,11 @@ namespace Battle
         /// <summary>回合数（进入我方回合时 +1；我方回合 N 与其后的敌方回合 N 同数）。</summary>
         public int Turn { get; private set; }
 
-        /// <summary>战斗开始：进入第 1 个我方回合。</summary>
+        /// <summary>战斗开始：进入第 1 个我方回合（BattleStarted 事实由 session.Start 在造实体后先行广播）。</summary>
         public void Start()
         {
             if (Phase != BattlePhase.NotStarted)
                 throw new InvalidOperationException("战斗已开始，不可重复 Start");
-            session.OnBattleStarted();
             EnterPlayerTurn();
         }
 

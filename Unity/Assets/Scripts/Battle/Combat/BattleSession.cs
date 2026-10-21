@@ -105,6 +105,7 @@ namespace Battle
             enemyLeader = world.AddLeader(BattleWorld.EnemyTeam, "敌方", setup.EnemyHp);
             deck.AddRange(setup.Deck);
             energy = setup.InitialEnergy;
+            OnBattleStarted(); // "战斗开始"事实先于起手抽牌（叙事顺序）
             for (int i = 0; i < setup.StartingHandSize; i++) DrawOne();
 
             flow.Start();
