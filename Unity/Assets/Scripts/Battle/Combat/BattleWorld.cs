@@ -41,6 +41,9 @@ namespace Battle
         public readonly List<(SkillEntity Source, SkillEntity Target, double Amount)> EffectDamageLog =
             new List<(SkillEntity, SkillEntity, double)>();
 
+        /// <summary>宿主注入的抽牌动作（DrawCardsOp 的执行通路；null=未注入，op 执行即抛配置错误）。</summary>
+        public System.Action<int> DrawCards;
+
         public SkillEntity AddLeader(int team, string name, int maxHp) =>
             Add(team, name, EntityKind.Leader, 0, maxHp);
 

@@ -615,6 +615,73 @@ namespace Battle.Tests
                 SkillContext.Of(u)));
         }
 
+        // ==================== 护盾（M2-T4：先耗盾再扣血） ====================
+
+        [Test]
+        public void 护盾_先吸收再扣血_盾量入返回值()
+        {
+            TestHost host = new TestHost(0);
+            SkillEntity target = host.AddUnit(TestHost.TeamA, "带盾者", 0, 10);
+            target.Attributes.SetBase(AttributeId.Shield, 5);
+
+            DamageResult r = host.Engine.ResolveDamage(null, target, 7, DamageSourceKind.Effect);
+
+            Assert.AreEqual(8, target.Attributes.CurrentInt(AttributeId.CurrentHp), "7 伤先耗 5 盾再扣 2 血");
+            Assert.AreEqual(0, target.Attributes.CurrentInt(AttributeId.Shield), "盾耗尽");
+            Assert.AreEqual(2, r.Amount, "Amount=实际扣血（盾吸收不计，与溢出同语义）");
+            Assert.AreEqual(5, r.ShieldAbsorbed, "盾吸收量入明细");
+        }
+
+        [Test]
+        public void 护盾_伤害不大于盾_血不动()
+        {
+            TestHost host = new TestHost(0);
+            SkillEntity target = host.AddUnit(TestHost.TeamA, "带盾者", 0, 10);
+            target.Attributes.SetBase(AttributeId.Shield, 6);
+
+            DamageResult r = host.Engine.ResolveDamage(null, target, 4, DamageSourceKind.Effect);
+
+            Assert.AreEqual(10, target.Attributes.CurrentInt(AttributeId.CurrentHp), "4 伤被 6 盾全吸收");
+            Assert.AreEqual(2, target.Attributes.CurrentInt(AttributeId.Shield), "余盾 2");
+            Assert.AreEqual(0, r.Amount);
+            Assert.AreEqual(4, r.ShieldAbsorbed);
+        }
+
+        [Test]
+        public void 护盾_临时盾修饰到期清抵扣账_新盾不被旧账吃()
+        {
+            TestHost host = new TestHost(0);
+            SkillEntity target = host.AddUnit(TestHost.TeamA, "带盾者", 0, 10);
+            host.Engine.ApplyTransientModifier(target, target, AttributeId.Shield, ModOp.Add, 5,
+                EffectDurationKind.Rounds, 2); // 临时盾 +5（修饰路径——防御卡同款）
+            Assert.AreEqual(5, target.Attributes.CurrentInt(AttributeId.Shield), "修饰盾 +5");
+
+            host.Engine.ResolveDamage(null, target, 7, DamageSourceKind.Effect); // 吸 5 穿 2：Base 记账 -5
+            Assert.AreEqual(8, target.Attributes.CurrentInt(AttributeId.CurrentHp));
+            Assert.AreEqual(0, target.Attributes.CurrentInt(AttributeId.Shield), "Current = Base(-5) + 修饰(+5) = 0");
+
+            host.BeginRound(); // TestHost 单 tick 节奏：Rounds=2 第一次 tick 2→1
+            host.BeginRound(); // 第二次 tick 1→0：修饰移除 → 无修饰负 Base 清账
+            Assert.AreEqual(0, target.Attributes.Base(AttributeId.Shield), "修饰到期清抵扣账");
+
+            target.Attributes.SetBase(AttributeId.Shield, 3);
+            Assert.AreEqual(3, target.Attributes.CurrentInt(AttributeId.Shield), "新盾不被旧账吃");
+        }
+
+        [Test]
+        public void 时长_ThisPhase相位结束即清场_扛不到后续阶段()
+        {
+            TestHost host = new TestHost(0);
+            SkillEntity e = host.AddUnit(TestHost.TeamA, "增益者", 2, 10);
+            host.Engine.ApplyTransientModifier(e, e, AttributeId.Attack, ModOp.Add, 3,
+                EffectDurationKind.ThisPhase, 1);
+            Assert.AreEqual(5, e.Attributes.CurrentInt(AttributeId.Attack), "ThisPhase +3 攻");
+
+            host.EndRound(); // = engine.ExpirePhase（BattleSession 双方回合结束各调一次）
+            Assert.AreEqual(2, e.Attributes.CurrentInt(AttributeId.Attack),
+                "ThisPhase 在相位结束（ExpirePhase）即清——出牌阶段授予的盾扛不到敌方回合，防御卡因此用 Rounds=2");
+        }
+
         sealed class UnknownOp : EffectOp { }
     }
 }

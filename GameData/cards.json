@@ -1,0 +1,203 @@
+[
+  {
+    "kind": "effect",
+    "id": 1001,
+    "name": "火球术",
+    "cost": 2,
+    "effects": [
+      {
+        "target": "Chosen",
+        "ops": [
+          {
+            "op": "Damage",
+            "amount": {
+              "kind": "Const",
+              "value": 4.0,
+              "key": "",
+              "attribute": "Attack",
+              "coefficient": 1.0,
+              "useSnapshot": false
+            },
+            "kind": "Effect"
+          }
+        ],
+        "playAfterAnimation": false
+      }
+    ]
+  },
+  {
+    "kind": "effect",
+    "id": 1002,
+    "name": "电火花",
+    "cost": 1,
+    "effects": [
+      {
+        "target": "Chosen",
+        "ops": [
+          {
+            "op": "Damage",
+            "amount": {
+              "kind": "Const",
+              "value": 2.0,
+              "key": "",
+              "attribute": "Attack",
+              "coefficient": 1.0,
+              "useSnapshot": false
+            },
+            "kind": "Effect"
+          }
+        ],
+        "playAfterAnimation": false
+      }
+    ]
+  },
+  {
+    "kind": "monster",
+    "id": 2001,
+    "name": "幼狼",
+    "cost": 2,
+    "attack": 2,
+    "maxHp": 2
+  },
+  {
+    "kind": "monster",
+    "id": 2002,
+    "name": "石像",
+    "cost": 3,
+    "attack": 3,
+    "maxHp": 4
+  },
+  {
+    "kind": "monster",
+    "id": 2003,
+    "name": "小鬼",
+    "cost": 0,
+    "attack": 2,
+    "maxHp": 3
+  },
+  {
+    "kind": "monster",
+    "id": 2004,
+    "name": "食人魔",
+    "cost": 0,
+    "attack": 4,
+    "maxHp": 5
+  },
+  {
+    "kind": "effect",
+    "id": 1003,
+    "name": "打击",
+    "cost": 1,
+    "effects": [
+      {
+        "target": "Chosen",
+        "ops": [
+          {
+            "op": "Damage",
+            "amount": {
+              "kind": "Const",
+              "value": 6.0,
+              "key": "",
+              "attribute": "Attack",
+              "coefficient": 1.0,
+              "useSnapshot": false
+            },
+            "kind": "Effect"
+          }
+        ],
+        "playAfterAnimation": false
+      }
+    ]
+  },
+  {
+    "kind": "effect",
+    "id": 1004,
+    "name": "防御",
+    "cost": 1,
+    "effects": [
+      {
+        "target": "Self",
+        "ops": [
+          {
+            "op": "ModifyAttribute",
+            "attribute": "Shield",
+            "mod": "Add",
+            "magnitude": {
+              "kind": "Const",
+              "value": 5.0,
+              "key": "",
+              "attribute": "Attack",
+              "coefficient": 1.0,
+              "useSnapshot": false
+            },
+            "duration": "Rounds",
+            "rounds": 2
+          }
+        ],
+        "playAfterAnimation": false
+      }
+    ]
+  },
+  {
+    "kind": "effect",
+    "id": 1005,
+    "name": "抽牌",
+    "cost": 1,
+    "effects": [
+      {
+        "target": "Self",
+        "ops": [
+          {
+            "op": "DrawCards",
+            "count": 2
+          }
+        ],
+        "playAfterAnimation": false
+      }
+    ]
+  },
+  {
+    "kind": "effect",
+    "id": 1006,
+    "name": "处刑",
+    "cost": 2,
+    "effects": [
+      {
+        "target": "Chosen",
+        "ops": [
+          {
+            "op": "Damage",
+            "amount": {
+              "kind": "Const",
+              "value": 6.0,
+              "key": "",
+              "attribute": "Attack",
+              "coefficient": 1.0,
+              "useSnapshot": false
+            },
+            "kind": "Effect"
+          },
+          {
+            "op": "Conditional",
+            "condition": {
+              "kind": "AttributeCompare",
+              "attribute": "CurrentHp",
+              "op": "LessOrEqual",
+              "valueType": "Fixed",
+              "value": 0.0
+            },
+            "conditionTarget": "Current",
+            "then": [
+              {
+                "op": "DrawCards",
+                "count": 1
+              }
+            ],
+            "else": []
+          }
+        ],
+        "playAfterAnimation": false
+      }
+    ]
+  }
+]

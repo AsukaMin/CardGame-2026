@@ -209,7 +209,7 @@ namespace Battle
 
         // ==================== 伤害/治疗管线（三段） ====================
 
-        /// <summary>伤害：Preview 聚合改写 → 落地（改 CurrentHp 的 Base）→ Applied 事件入队。</summary>
+        /// <summary>伤害：Preview 聚合改写 → 护盾吸收 → 落地（改 CurrentHp 的 Base）→ Applied 事件入队。</summary>
         public DamageResult ResolveDamage(SkillEntity source, SkillEntity target, double amount,
             DamageSourceKind kind = DamageSourceKind.Effect)
         {
@@ -232,12 +232,22 @@ namespace Battle
                 finally { pendingDamage = saved; }
 
                 double final = Math.Max(0, ctx.Amount);
+                // 护盾先吸收（应用层规则——Combat/Effect 统一生效；Preview 在上，看到的是改写前值）
+                double shieldAbsorbed = 0;
+                double shield = target.Attributes.Current(AttributeId.Shield);
+                if (shield > 0)
+                {
+                    shieldAbsorbed = Math.Min(final, shield);
+                    target.Attributes.SetBase(AttributeId.Shield,
+                        target.Attributes.Base(AttributeId.Shield) - shieldAbsorbed);
+                    final -= shieldAbsorbed;
+                }
                 double before = target.Attributes.Current(AttributeId.CurrentHp);
                 target.Attributes.SetBase(AttributeId.CurrentHp,
                     target.Attributes.Base(AttributeId.CurrentHp) - final);
                 double actual = before - target.Attributes.Current(AttributeId.CurrentHp);
                 EnqueueEvent(SkillTags.EventDamageApplied, source, target, actual, kind);
-                result = new DamageResult(target, actual);
+                result = new DamageResult(target, actual, shieldAbsorbed);
             });
             return result;
         }

@@ -22,6 +22,28 @@ namespace Battle
         }
     }
 
+    // ==================== 抽牌 op（宿主自定义 op：效果卡经 JSON 驱动抽牌） ====================
+
+    /// <summary>抽 N 张牌（效果卡载荷）。判别名 "DrawCards" 经 SkillJson 注册表进 JSON（幂等登记）。</summary>
+    public sealed class DrawCardsOp : EffectOp
+    {
+        public int Count = 1;
+    }
+
+    sealed class DrawCardsSpec : OpSpec
+    {
+        public override void Execute(SkillEngine engine, SkillContext ctx)
+        {
+            DrawCardsOp op = (DrawCardsOp)Data;
+            if (op.Count < 1)
+                throw new InvalidOperationException($"DrawCards 数量非法：{op.Count}（配置错误）");
+            BattleWorld world = (BattleWorld)engine.World;
+            if (world.DrawCards == null)
+                throw new InvalidOperationException("宿主未注入抽牌动作 BattleWorld.DrawCards（配置错误）");
+            world.DrawCards(op.Count); // 在引擎 Execute 内回调宿主——嵌套 Raise 走 FIFO 队列现有语义
+        }
+    }
+
     /// <summary>
     /// 战斗会话（M1 最小版）：命令 API 门面 + 结算编排 + 事实广播。
     /// 逻辑核心——零表现依赖；"发生了什么"经 GameEventBus 广播，表现层只监听（设计铁律）。
@@ -57,13 +79,16 @@ namespace Battle
             this.setup = setup ?? throw new ArgumentNullException(nameof(setup));
             random = new SeededRandomSource(setup.RandomSeed);
             world = new BattleWorld(random);
+            world.DrawCards = count => { for (int i = 0; i < count; i++) DrawOne(); }; // 抽牌 op 的执行通路
             engine = new SkillEngine(world);
             flow = new TurnFlow(this);
             energyRule = setup.EnergyRule ?? new FlatPerTurnRule(2);
             energyContext = new EnergyContext { Session = this };
 
-            // 宿主自定义 op：效果伤害记录（技能系统设计§7.6 扩展点）
+            // 宿主自定义 op：效果伤害记录 + 抽牌（技能系统设计§7.6 扩展点）
             engine.RegisterOp<RecordEffectDamageOp>(op => new RecordEffectDamageSpec { Data = op });
+            engine.RegisterOp<DrawCardsOp>(op => new DrawCardsSpec { Data = op });
+            SkillJson.TryRegisterOp<DrawCardsOp>("DrawCards"); // JSON 判别登记——幂等（每场对局都构造）
             engine.RegisterTrigger(null, new TriggerDef
             {
                 EventTag = SkillTags.EventDamageApplied.Name,

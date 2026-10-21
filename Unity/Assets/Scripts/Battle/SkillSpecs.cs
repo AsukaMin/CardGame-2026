@@ -32,9 +32,16 @@ namespace Battle
     public readonly struct DamageResult
     {
         public readonly SkillEntity Target;
-        /// <summary>实际造成的数值（落地前后差值）。</summary>
+        /// <summary>实际造成的数值（落地前后差值——护盾吸收与溢出不计）。</summary>
         public readonly double Amount;
-        public DamageResult(SkillEntity target, double amount) { Target = target; Amount = amount; }
+        /// <summary>护盾吸收量（先耗盾再扣血的规则明细；不进 Applied 事件值，与溢出同语义）。</summary>
+        public readonly double ShieldAbsorbed;
+        public DamageResult(SkillEntity target, double amount, double shieldAbsorbed = 0)
+        {
+            Target = target;
+            Amount = amount;
+            ShieldAbsorbed = shieldAbsorbed;
+        }
     }
 
     /// <summary>治疗结算结果。</summary>

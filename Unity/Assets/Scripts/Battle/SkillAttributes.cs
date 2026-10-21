@@ -3,13 +3,14 @@ using System.Collections.Generic;
 
 namespace Battle
 {
-    /// <summary>属性 Id（分段预留：1-99 战斗三件套，后续按需扩段）。</summary>
+    /// <summary>属性 Id（分段预留：1-99 战斗段=攻/MaxHp/CurrentHp/护盾，后续按需扩段）。</summary>
     public enum AttributeId
     {
         None = 0,
         Attack = 1,
         MaxHp = 2,
         CurrentHp = 3,
+        Shield = 4,
     }
 
     /// <summary>修饰操作：聚合顺序固定为 Override ?? (Base+ΣAdd) × ΠMultiply。</summary>
@@ -79,6 +80,9 @@ namespace Battle
         /// <summary>堆叠层数变化后标脏（重算时层数参与聚合）。</summary>
         public void MarkDirty() => dirty = true;
 
+        /// <summary>是否仍挂有修饰（护盾抵扣账清零的判定用）。</summary>
+        public bool HasModifiers => modifiers.Count > 0;
+
         void Recalculate()
         {
             dirty = false;
@@ -107,7 +111,7 @@ namespace Battle
     }
 
     /// <summary>
-    /// 属性容器：字典 + MaxHp↔CurrentHp 联动（增益抬血/减益夹紧）+ 变化事件。
+    /// 属性容器：字典 + MaxHp↔CurrentHp 联动（增益抬血/减益夹紧）+ 护盾抵扣账清零 + 变化事件。
     /// 事件在联动处理完之后触发（先血量落地，再广播）。
     /// </summary>
     public sealed class SkillAttributeContainer
@@ -212,6 +216,18 @@ namespace Battle
                 {
                     hp.SetBase(clamped);
                     after = hp.CurrentValue;
+                }
+            }
+
+            // 盾耗尽后的抵扣账清零：盾消耗记账在 Base 负值（Current=Base+Σ修饰 ≥ 0 恒成立），
+            // 修饰（临时盾）全部摘除后清账——新盾不被旧账吃（防御卡管线规则，与 MaxHp↔CurrentHp 联动同级）
+            if (id == AttributeId.Shield)
+            {
+                SkillAttribute shield = Get(id);
+                if (shield.BaseValue < 0 && !shield.HasModifiers)
+                {
+                    shield.SetBase(0);
+                    after = shield.CurrentValue;
                 }
             }
 
