@@ -1,0 +1,767 @@
+fileFormatVersion: 2
+guid: d4ff8cc458e89a147b949b69b6a11589
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -2074289332692683746
+    second: Star.svg_0
+  - first:
+      213: 7582809283256057411
+    second: Star.svg_1
+  - first:
+      213: 7718192231021555501
+    second: Star.svg_2
+  - first:
+      213: 1050687007584476625
+    second: Star.svg_3
+  - first:
+      213: 4725972712972994208
+    second: Star.svg_4
+  - first:
+      213: -5614214532631975711
+    second: Star.svg_5
+  - first:
+      213: 8093482604383296345
+    second: Star.svg_6
+  - first:
+      213: 4544848590596441864
+    second: Star.svg_7
+  - first:
+      213: -4385066889014925741
+    second: Star.svg_8
+  - first:
+      213: 9208572172376725807
+    second: Star.svg_9
+  - first:
+      213: -156706458026958724
+    second: Star.svg_10
+  - first:
+      213: -9180978806579258340
+    second: Star.svg_11
+  - first:
+      213: 6170815456123380874
+    second: Star.svg_12
+  - first:
+      213: -2929510710591686063
+    second: Star.svg_13
+  - first:
+      213: 8160585040592202955
+    second: Star.svg_14
+  - first:
+      213: -4873621287873513993
+    second: Star.svg_15
+  - first:
+      213: -5358242794205167873
+    second: Star.svg_16
+  - first:
+      213: -359316795923875298
+    second: Star.svg_17
+  - first:
+      213: -7853893138626139620
+    second: Star.svg_18
+  - first:
+      213: 6958117946237276655
+    second: Star.svg_19
+  - first:
+      213: 3010423160584771465
+    second: Star.svg_20
+  - first:
+      213: -6750693268660703509
+    second: Star.svg_21
+  - first:
+      213: -8025346290406961182
+    second: Star.svg_22
+  - first:
+      213: -6391240734364059555
+    second: Star.svg_23
+  - first:
+      213: -4239309106116015794
+    second: Star.svg_24
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Star.svg_0
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 678
+        width: 142
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e14787b87d4a633e0800000000000000
+      internalID: -2074289332692683746
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_1
+      rect:
+        serializedVersion: 2
+        x: 253
+        y: 678
+        width: 126
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 34ef2002edc8b3960800000000000000
+      internalID: 7582809283256057411
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_2
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 633
+        width: 23
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2f283ef0f68c1b60800000000000000
+      internalID: 7718192231021555501
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_3
+      rect:
+        serializedVersion: 2
+        x: 253
+        y: 633
+        width: 23
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1ddd031444ac49e00800000000000000
+      internalID: 1050687007584476625
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_4
+      rect:
+        serializedVersion: 2
+        x: 276
+        y: 633
+        width: 23
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0a6c1f6a427069140800000000000000
+      internalID: 4725972712972994208
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_5
+      rect:
+        serializedVersion: 2
+        x: 299
+        y: 633
+        width: 23
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1e8a2a1c0ad4612b0800000000000000
+      internalID: -5614214532631975711
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_6
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 584
+        width: 125
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95bd11e2c83d15070800000000000000
+      internalID: 8093482604383296345
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_7
+      rect:
+        serializedVersion: 2
+        x: 253
+        y: 593
+        width: 23
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8078f68a6bb821f30800000000000000
+      internalID: 4544848590596441864
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_8
+      rect:
+        serializedVersion: 2
+        x: 276
+        y: 593
+        width: 23
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 35620f3c5ec1523c0800000000000000
+      internalID: -4385066889014925741
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_9
+      rect:
+        serializedVersion: 2
+        x: 299
+        y: 593
+        width: 23
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f29df070a9b6bcf70800000000000000
+      internalID: 9208572172376725807
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_10
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 539
+        width: 23
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c702b438e4443ddf0800000000000000
+      internalID: -156706458026958724
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_11
+      rect:
+        serializedVersion: 2
+        x: 253
+        y: 553
+        width: 23
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1c14771b6c969080800000000000000
+      internalID: -9180978806579258340
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_12
+      rect:
+        serializedVersion: 2
+        x: 276
+        y: 553
+        width: 23
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a8469b486f323a550800000000000000
+      internalID: 6170815456123380874
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_13
+      rect:
+        serializedVersion: 2
+        x: 299
+        y: 553
+        width: 23
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 15afa79a7894857d0800000000000000
+      internalID: -2929510710591686063
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_14
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 490
+        width: 156
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bcc6dd79bd8304170800000000000000
+      internalID: 8160585040592202955
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_15
+      rect:
+        serializedVersion: 2
+        x: 253
+        y: 513
+        width: 23
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7f5748e924b6d5cb0800000000000000
+      internalID: -4873621287873513993
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_16
+      rect:
+        serializedVersion: 2
+        x: 276
+        y: 513
+        width: 23
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ffeba1f5192b3a5b0800000000000000
+      internalID: -5358242794205167873
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_17
+      rect:
+        serializedVersion: 2
+        x: 299
+        y: 513
+        width: 23
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e1a30212743730bf0800000000000000
+      internalID: -359316795923875298
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_18
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 425
+        width: 44
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c1aaf485dcd510390800000000000000
+      internalID: -7853893138626139620
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_19
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 376
+        width: 140
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe15eba0863309060800000000000000
+      internalID: 6958117946237276655
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_20
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 311
+        width: 45
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 98793462aeb27c920800000000000000
+      internalID: 3010423160584771465
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_21
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 262
+        width: 142
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: beeabd52d38b052a0800000000000000
+      internalID: -6750693268660703509
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_22
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 181
+        width: 60
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2ef4bc8a11e30a090800000000000000
+      internalID: -8025346290406961182
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_23
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 131
+        width: 126
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d5839321a60cd47a0800000000000000
+      internalID: -6391240734364059555
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star.svg_24
+      rect:
+        serializedVersion: 2
+        x: 50
+        y: 51
+        width: 61
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4940ec24d2fa25c0800000000000000
+      internalID: -4239309106116015794
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Star.svg_0: -2074289332692683746
+      Star.svg_1: 7582809283256057411
+      Star.svg_10: -156706458026958724
+      Star.svg_11: -9180978806579258340
+      Star.svg_12: 6170815456123380874
+      Star.svg_13: -2929510710591686063
+      Star.svg_14: 8160585040592202955
+      Star.svg_15: -4873621287873513993
+      Star.svg_16: -5358242794205167873
+      Star.svg_17: -359316795923875298
+      Star.svg_18: -7853893138626139620
+      Star.svg_19: 6958117946237276655
+      Star.svg_2: 7718192231021555501
+      Star.svg_20: 3010423160584771465
+      Star.svg_21: -6750693268660703509
+      Star.svg_22: -8025346290406961182
+      Star.svg_23: -6391240734364059555
+      Star.svg_24: -4239309106116015794
+      Star.svg_3: 1050687007584476625
+      Star.svg_4: 4725972712972994208
+      Star.svg_5: -5614214532631975711
+      Star.svg_6: 8093482604383296345
+      Star.svg_7: 4544848590596441864
+      Star.svg_8: -4385066889014925741
+      Star.svg_9: 9208572172376725807
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

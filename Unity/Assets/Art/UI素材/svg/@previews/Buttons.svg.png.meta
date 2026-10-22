@@ -1,0 +1,715 @@
+fileFormatVersion: 2
+guid: fe45fe07c54bcd64688837a61ee4bf97
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -2796223688851745729
+    second: Buttons.svg_0
+  - first:
+      213: -5258193731090274999
+    second: Buttons.svg_1
+  - first:
+      213: -5935693055759744871
+    second: Buttons.svg_2
+  - first:
+      213: -2893075506822845148
+    second: Buttons.svg_3
+  - first:
+      213: -5781278239912805023
+    second: Buttons.svg_4
+  - first:
+      213: 4246997060046639818
+    second: Buttons.svg_5
+  - first:
+      213: -5888293018273507141
+    second: Buttons.svg_6
+  - first:
+      213: 9107487134871250610
+    second: Buttons.svg_7
+  - first:
+      213: 4097385079813310281
+    second: Buttons.svg_8
+  - first:
+      213: 2316831865392340183
+    second: Buttons.svg_9
+  - first:
+      213: 767509780763768711
+    second: Buttons.svg_10
+  - first:
+      213: 142141399106656790
+    second: Buttons.svg_11
+  - first:
+      213: 2127668607808738267
+    second: Buttons.svg_12
+  - first:
+      213: -7442406939791186071
+    second: Buttons.svg_13
+  - first:
+      213: 5347251059592665647
+    second: Buttons.svg_14
+  - first:
+      213: -7489617646244853394
+    second: Buttons.svg_15
+  - first:
+      213: 493598161516997891
+    second: Buttons.svg_16
+  - first:
+      213: 5412414848365827768
+    second: Buttons.svg_17
+  - first:
+      213: -4419190044453775104
+    second: Buttons.svg_18
+  - first:
+      213: 6843935015813703402
+    second: Buttons.svg_19
+  - first:
+      213: 203855730643067858
+    second: Buttons.svg_20
+  - first:
+      213: 5155723491427966510
+    second: Buttons.svg_21
+  - first:
+      213: 1074165267699036727
+    second: Buttons.svg_22
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Buttons.svg_0
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 569
+        width: 66
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f349579be51d139d0800000000000000
+      internalID: -2796223688851745729
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_1
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 439
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 945ad2229a42707b0800000000000000
+      internalID: -5258193731090274999
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_2
+      rect:
+        serializedVersion: 2
+        x: 149
+        y: 439
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 99000bb4d9e20ada0800000000000000
+      internalID: -5935693055759744871
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_3
+      rect:
+        serializedVersion: 2
+        x: 249
+        y: 439
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 42de07b972bb9d7d0800000000000000
+      internalID: -2893075506822845148
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_4
+      rect:
+        serializedVersion: 2
+        x: 349
+        y: 439
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 16d3d424216c4cfa0800000000000000
+      internalID: -5781278239912805023
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_5
+      rect:
+        serializedVersion: 2
+        x: 449
+        y: 439
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ac25536135d50fa30800000000000000
+      internalID: 4246997060046639818
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_6
+      rect:
+        serializedVersion: 2
+        x: 549
+        y: 439
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb8156882b4984ea0800000000000000
+      internalID: -5888293018273507141
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_7
+      rect:
+        serializedVersion: 2
+        x: 649
+        y: 439
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b6e07eab4b446e70800000000000000
+      internalID: 9107487134871250610
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_8
+      rect:
+        serializedVersion: 2
+        x: 749
+        y: 439
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 947024e6506dcd830800000000000000
+      internalID: 4097385079813310281
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_9
+      rect:
+        serializedVersion: 2
+        x: 849
+        y: 439
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7dc14057e4a072020800000000000000
+      internalID: 2316831865392340183
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_10
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 309
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 787ff04441eb6aa00800000000000000
+      internalID: 767509780763768711
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_11
+      rect:
+        serializedVersion: 2
+        x: 149
+        y: 309
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 61a11a179dcf8f100800000000000000
+      internalID: 142141399106656790
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_12
+      rect:
+        serializedVersion: 2
+        x: 249
+        y: 309
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd39030735ff68d10800000000000000
+      internalID: 2127668607808738267
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_13
+      rect:
+        serializedVersion: 2
+        x: 349
+        y: 309
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 96728dfd15247b890800000000000000
+      internalID: -7442406939791186071
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_14
+      rect:
+        serializedVersion: 2
+        x: 449
+        y: 309
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2a1adbf180453a40800000000000000
+      internalID: 5347251059592665647
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_15
+      rect:
+        serializedVersion: 2
+        x: 549
+        y: 309
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e690414be688f0890800000000000000
+      internalID: -7489617646244853394
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_16
+      rect:
+        serializedVersion: 2
+        x: 649
+        y: 309
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 30da107a9ec99d600800000000000000
+      internalID: 493598161516997891
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_17
+      rect:
+        serializedVersion: 2
+        x: 749
+        y: 309
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b615edd0a2cc1b40800000000000000
+      internalID: 5412414848365827768
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_18
+      rect:
+        serializedVersion: 2
+        x: 849
+        y: 309
+        width: 82
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 009d3658112eba2c0800000000000000
+      internalID: -4419190044453775104
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_19
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 179
+        width: 162
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ae6ee6bd2aa8afe50800000000000000
+      internalID: 6843935015813703402
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_20
+      rect:
+        serializedVersion: 2
+        x: 229
+        y: 179
+        width: 162
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d3686af4bd34d200800000000000000
+      internalID: 203855730643067858
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_21
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 49
+        width: 162
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e2e53b2033fcc8740800000000000000
+      internalID: 5155723491427966510
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Buttons.svg_22
+      rect:
+        serializedVersion: 2
+        x: 229
+        y: 49
+        width: 162
+        height: 82
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 732734bae9338ee00800000000000000
+      internalID: 1074165267699036727
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Buttons.svg_0: -2796223688851745729
+      Buttons.svg_1: -5258193731090274999
+      Buttons.svg_10: 767509780763768711
+      Buttons.svg_11: 142141399106656790
+      Buttons.svg_12: 2127668607808738267
+      Buttons.svg_13: -7442406939791186071
+      Buttons.svg_14: 5347251059592665647
+      Buttons.svg_15: -7489617646244853394
+      Buttons.svg_16: 493598161516997891
+      Buttons.svg_17: 5412414848365827768
+      Buttons.svg_18: -4419190044453775104
+      Buttons.svg_19: 6843935015813703402
+      Buttons.svg_2: -5935693055759744871
+      Buttons.svg_20: 203855730643067858
+      Buttons.svg_21: 5155723491427966510
+      Buttons.svg_22: 1074165267699036727
+      Buttons.svg_3: -2893075506822845148
+      Buttons.svg_4: -5781278239912805023
+      Buttons.svg_5: 4246997060046639818
+      Buttons.svg_6: -5888293018273507141
+      Buttons.svg_7: 9107487134871250610
+      Buttons.svg_8: 4097385079813310281
+      Buttons.svg_9: 2316831865392340183
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

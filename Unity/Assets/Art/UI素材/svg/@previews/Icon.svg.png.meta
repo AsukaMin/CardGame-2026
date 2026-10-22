@@ -1,0 +1,611 @@
+fileFormatVersion: 2
+guid: 18c71f7a9cbb8c44ca523e3df7066f08
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7134245016260019302
+    second: Icon.svg_0
+  - first:
+      213: -2166024236542386984
+    second: Icon.svg_1
+  - first:
+      213: -6944533160815694611
+    second: Icon.svg_2
+  - first:
+      213: -2154287205735473977
+    second: Icon.svg_3
+  - first:
+      213: -5621567328076777224
+    second: Icon.svg_4
+  - first:
+      213: -9204575029917591534
+    second: Icon.svg_5
+  - first:
+      213: 1924462288090033474
+    second: Icon.svg_6
+  - first:
+      213: -4801578415421109957
+    second: Icon.svg_7
+  - first:
+      213: 8346427897990340014
+    second: Icon.svg_8
+  - first:
+      213: -9176737234421087727
+    second: Icon.svg_9
+  - first:
+      213: 9160892572745888321
+    second: Icon.svg_10
+  - first:
+      213: 1805464330548551326
+    second: Icon.svg_11
+  - first:
+      213: -3167567279448843268
+    second: Icon.svg_12
+  - first:
+      213: -5933541128105772918
+    second: Icon.svg_13
+  - first:
+      213: 4591062475146501109
+    second: Icon.svg_14
+  - first:
+      213: 7511626553996348238
+    second: Icon.svg_15
+  - first:
+      213: -660987109773664420
+    second: Icon.svg_16
+  - first:
+      213: -6427788959182743154
+    second: Icon.svg_17
+  - first:
+      213: 5509529641291907789
+    second: Icon.svg_18
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Icon.svg_0
+      rect:
+        serializedVersion: 2
+        x: 49
+        y: 50
+        width: 52
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 66487ce1b0ee10360800000000000000
+      internalID: 7134245016260019302
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_1
+      rect:
+        serializedVersion: 2
+        x: 148
+        y: 50
+        width: 61
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8dc1106de6cb0f1e0800000000000000
+      internalID: -2166024236542386984
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_2
+      rect:
+        serializedVersion: 2
+        x: 257
+        y: 50
+        width: 18
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dece8aa42ef00af90800000000000000
+      internalID: -6944533160815694611
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_3
+      rect:
+        serializedVersion: 2
+        x: 281
+        y: 50
+        width: 18
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ccd7f5433f6a12e0800000000000000
+      internalID: -2154287205735473977
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_4
+      rect:
+        serializedVersion: 2
+        x: 347
+        y: 50
+        width: 39
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f8ba09ac4e2cf1b0800000000000000
+      internalID: -5621567328076777224
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_5
+      rect:
+        serializedVersion: 2
+        x: 396
+        y: 64
+        width: 13
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 218d45937c7c24080800000000000000
+      internalID: -9204575029917591534
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_6
+      rect:
+        serializedVersion: 2
+        x: 457
+        y: 50
+        width: 39
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 24ded39314015ba10800000000000000
+      internalID: 1924462288090033474
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_7
+      rect:
+        serializedVersion: 2
+        x: 499
+        y: 64
+        width: 30
+        height: 30
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b3944abfedd5d5db0800000000000000
+      internalID: -4801578415421109957
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_8
+      rect:
+        serializedVersion: 2
+        x: 577
+        y: 50
+        width: 44
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eaddf13b3f774d370800000000000000
+      internalID: 8346427897990340014
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_9
+      rect:
+        serializedVersion: 2
+        x: 669
+        y: 50
+        width: 58
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1120b311b1ea5a080800000000000000
+      internalID: -9176737234421087727
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_10
+      rect:
+        serializedVersion: 2
+        x: 775
+        y: 50
+        width: 50
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 14278082247022f70800000000000000
+      internalID: 9160892572745888321
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_11
+      rect:
+        serializedVersion: 2
+        x: 873
+        y: 92
+        width: 24
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e9e1cfc2e3c4e0910800000000000000
+      internalID: 1805464330548551326
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_12
+      rect:
+        serializedVersion: 2
+        x: 907
+        y: 92
+        width: 24
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cfb1d42875a8a04d0800000000000000
+      internalID: -3167567279448843268
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_13
+      rect:
+        serializedVersion: 2
+        x: 978
+        y: 50
+        width: 45
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a88b51ff7c3d7ada0800000000000000
+      internalID: -5933541128105772918
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_14
+      rect:
+        serializedVersion: 2
+        x: 1071
+        y: 50
+        width: 44
+        height: 58
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5fb9bb42ffab6bf30800000000000000
+      internalID: 4591062475146501109
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_15
+      rect:
+        serializedVersion: 2
+        x: 873
+        y: 71
+        width: 24
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e4b08547d88ae3860800000000000000
+      internalID: 7511626553996348238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_16
+      rect:
+        serializedVersion: 2
+        x: 907
+        y: 71
+        width: 24
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c5f14d8c9b3b3d6f0800000000000000
+      internalID: -660987109773664420
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_17
+      rect:
+        serializedVersion: 2
+        x: 873
+        y: 50
+        width: 24
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e891cbc5ff7ebc6a0800000000000000
+      internalID: -6427788959182743154
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Icon.svg_18
+      rect:
+        serializedVersion: 2
+        x: 907
+        y: 50
+        width: 24
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc280bc9408c57c40800000000000000
+      internalID: 5509529641291907789
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Icon.svg_0: 7134245016260019302
+      Icon.svg_1: -2166024236542386984
+      Icon.svg_10: 9160892572745888321
+      Icon.svg_11: 1805464330548551326
+      Icon.svg_12: -3167567279448843268
+      Icon.svg_13: -5933541128105772918
+      Icon.svg_14: 4591062475146501109
+      Icon.svg_15: 7511626553996348238
+      Icon.svg_16: -660987109773664420
+      Icon.svg_17: -6427788959182743154
+      Icon.svg_18: 5509529641291907789
+      Icon.svg_2: -6944533160815694611
+      Icon.svg_3: -2154287205735473977
+      Icon.svg_4: -5621567328076777224
+      Icon.svg_5: -9204575029917591534
+      Icon.svg_6: 1924462288090033474
+      Icon.svg_7: -4801578415421109957
+      Icon.svg_8: 8346427897990340014
+      Icon.svg_9: -9176737234421087727
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
