@@ -13,10 +13,11 @@ public static class BattleSmokeMenu
     [MenuItem("Tools/战斗核心/跑一场冒烟对局")]
     public static void RunSmokeBattle()
     {
+        CardCatalog catalog = CardCatalog.Load(File.ReadAllText(CardsJsonPath()));
         AutoBattleResult result;
         using (BattleDebugPresenter presenter = BattleDebugPresenter.Attach())
         {
-            result = AutoBattle.Run(DemoBattleData.CreateSetup(SmokeSeed));
+            result = AutoBattle.Run(DemoBattleData.CreateSetup(catalog, SmokeSeed));
         }
         Debug.Log($"[战斗] 冒烟对局结束：{(result.Result == BattleResult.Victory ? "玩家胜利" : "玩家失败")}，共 {result.Turns} 回合");
     }
@@ -25,9 +26,7 @@ public static class BattleSmokeMenu
     [MenuItem("Tools/战斗核心/加载卡表校验")]
     public static void LoadCardsJson()
     {
-        string repoRoot = Directory.GetParent(Application.dataPath).Parent.FullName; // Assets→Unity→仓库根
-        string json = File.ReadAllText(Path.Combine(repoRoot, "GameData", "cards.json"));
-        CardCatalog catalog = CardCatalog.Load(json);
+        CardCatalog catalog = CardCatalog.Load(File.ReadAllText(CardsJsonPath()));
         int monsters = 0, effects = 0;
         foreach (BattleCard card in catalog.Entries)
         {
@@ -36,4 +35,8 @@ public static class BattleSmokeMenu
         }
         Debug.Log($"[战斗] 卡表加载：{catalog.Count} 张（效果 {effects} / 怪兽 {monsters}）——校验通过");
     }
+
+    /// <summary>仓库根 GameData/cards.json（Assets→Unity→仓库根——目录纪律：路径只在调用方）。</summary>
+    static string CardsJsonPath() =>
+        Path.Combine(Directory.GetParent(Application.dataPath).Parent.FullName, "GameData", "cards.json");
 }

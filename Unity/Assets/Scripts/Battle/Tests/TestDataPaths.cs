@@ -12,14 +12,17 @@ namespace Battle.Tests
     {
         public static string CardsJson()
         {
-            DirectoryInfo dir = new DirectoryInfo(AppContext.BaseDirectory);
-            for (int i = 0; i < 8 && dir != null; i++, dir = dir.Parent)
+            // 起点=测试程序集所在目录：headless 在 .zcode/tmp/…/bin、EditMode 在 Library/ScriptAssemblies——
+            // 注意 AppContext.BaseDirectory 在编辑器下指向 Unity 安装目录（E:\...\Editor），不能用作起点
+            string assemblyDir = Path.GetDirectoryName(typeof(TestDataPaths).Assembly.Location);
+            DirectoryInfo dir = new DirectoryInfo(string.IsNullOrEmpty(assemblyDir) ? AppContext.BaseDirectory : assemblyDir);
+            for (; dir != null; dir = dir.Parent)
             {
                 string candidate = Path.Combine(dir.FullName, "GameData", "cards.json");
                 if (File.Exists(candidate)) return candidate;
             }
             throw new InvalidOperationException(
-                $"未找到 GameData/cards.json（从 {AppContext.BaseDirectory} 向上 8 级）——测试数据缺失");
+                $"未找到 GameData/cards.json（从 {assemblyDir} 逐级向上至盘根）——测试数据缺失");
         }
     }
 }

@@ -6,7 +6,7 @@ namespace Battle.Tests
 {
     /// <summary>
     /// T2 卡牌 JSON 形状用例：扁平信封（kind/id/name/cost + 卡体）读写 / 单卡加载期校验抛错矩阵 /
-    /// 六张 M1 演示卡全量往返（形状对 DemoBattleData 现存卡种的全表达覆盖证明）。
+    /// 六张 M1 演示卡全量往返（形状对 cards.json 现存卡种的全表达覆盖证明）。
     /// </summary>
     [TestFixture]
     public class SkillJsonCardTests
@@ -53,7 +53,7 @@ namespace Battle.Tests
             RoundTrip(cards, out CardEntry[] copy);
 
             Assert.That(copy.Length, Is.EqualTo(6));
-            // 关键值逐张抽查（与 DemoBattleData 原值一致）
+            // 关键值逐张抽查（与 cards.json 的 M1 移植卡原值一致）
             Assert.That(copy[0].Id, Is.EqualTo(1001));
             Assert.That(((DamageOp)copy[0].Card.Effect.Effects[0].Ops[0]).Amount.Value, Is.EqualTo(4));
             Assert.That(((DamageOp)copy[1].Card.Effect.Effects[0].Ops[0]).Amount.Value, Is.EqualTo(2));
@@ -111,7 +111,7 @@ namespace Battle.Tests
                 "{ \"kind\": \"effect\", \"id\": 1003, \"name\": \"坏卡\", " +
                 "\"effects\": [ { \"ops\": [ { \"op\": \"GrantTag\", \"tag\": \"Nope.X\" } ] } ] }"));
 
-        // ==================== M1 演示卡构造（值照抄 DemoBattleData，T5 移植的对照源） ====================
+        // ==================== M1 演示卡构造（值对应 cards.json 1001/1002/2001-2004 的移植原值） ====================
 
         static CardEntry Fireball() => new CardEntry
         {

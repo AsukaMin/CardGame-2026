@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Battle;
 using GameEvents;
 using NUnit.Framework;
@@ -317,12 +318,18 @@ namespace Battle.Tests
             Assert.IsFalse(ended[0].PlayerWon);
         }
 
-        // ==================== 完整对局（✅ 完成标准） ====================
+        // ==================== 完整对局（✅ 完成标准；M2 起牌组数据驱动） ====================
+
+        static CardCatalog catalog;
+
+        [OneTimeSetUp]
+        public void LoadCatalog() =>
+            catalog = CardCatalog.Load(File.ReadAllText(TestDataPaths.CardsJson()));
 
         [Test]
         public void 完整对局_自动跑完分出胜负()
         {
-            AutoBattleResult result = AutoBattle.Run(DemoBattleData.CreateSetup(seed: 123));
+            AutoBattleResult result = AutoBattle.Run(DemoBattleData.CreateSetup(catalog, seed: 123));
             Assert.AreNotEqual(BattleResult.None, result.Result, "必须分出胜负");
             Assert.Greater(result.Turns, 0);
             Assert.LessOrEqual(result.Turns, AutoBattle.MaxTurns);
@@ -331,8 +338,8 @@ namespace Battle.Tests
         [Test]
         public void 完整对局_同种子重跑结果一致()
         {
-            AutoBattleResult a = AutoBattle.Run(DemoBattleData.CreateSetup(seed: 42));
-            AutoBattleResult b = AutoBattle.Run(DemoBattleData.CreateSetup(seed: 42));
+            AutoBattleResult a = AutoBattle.Run(DemoBattleData.CreateSetup(catalog, seed: 42));
+            AutoBattleResult b = AutoBattle.Run(DemoBattleData.CreateSetup(catalog, seed: 42));
             Assert.AreEqual(a.Result, b.Result, "同种子同操作=同终局（确定性）");
             Assert.AreEqual(a.Turns, b.Turns);
         }
@@ -343,9 +350,76 @@ namespace Battle.Tests
             int[] seeds = { 1, 2, 3, 4, 5, 20261019 /* 编辑器冒烟固定种子 */ };
             foreach (int seed in seeds)
             {
-                AutoBattleResult result = AutoBattle.Run(DemoBattleData.CreateSetup(seed: seed));
+                AutoBattleResult result = AutoBattle.Run(DemoBattleData.CreateSetup(catalog, seed: seed));
                 Assert.AreNotEqual(BattleResult.None, result.Result, $"种子 {seed} 必须分出胜负");
             }
+        }
+
+        [Test]
+        public void 完整对局_数据牌组固定种子锚定终局()
+        {
+            // M1 完成标准不能丢：六卡数值原值移植 cards.json → 同种子终局与 M1 硬编码版一致（数值移植零漂移证明）
+            AutoBattleResult result = AutoBattle.Run(DemoBattleData.CreateSetup(catalog, seed: 20261019));
+            Assert.AreEqual(BattleResult.Defeat, result.Result, "锚定终局（M1 冒烟种子 20261019）");
+            Assert.AreEqual(7, result.Turns, "锚定回合数");
+        }
+
+        [Test]
+        public void 完整对局_M1硬编码牌组与数据牌组同种子同终局()
+        {
+            // 零漂移对照：退役前的 M1 硬编码卡定义（逐字段一致）vs cards.json 数据牌组——同种子必须同终局
+            foreach (int seed in new[] { 0, 42, 123, 20261019 })
+            {
+                AutoBattleResult fromCode = AutoBattle.Run(M1HardcodedSetup(seed));
+                AutoBattleResult fromData = AutoBattle.Run(DemoBattleData.CreateSetup(catalog, seed));
+                Assert.AreEqual(fromCode.Result, fromData.Result, $"种子 {seed}：终局一致（数值移植零漂移）");
+                Assert.AreEqual(fromCode.Turns, fromData.Turns, $"种子 {seed}：回合数一致");
+            }
+        }
+
+        /// <summary>M1 硬编码版牌组（零漂移对照用——与退役前 DemoBattleData 逐字段一致；卡定义已数据化，仅测试留档）。</summary>
+        static BattleSetup M1HardcodedSetup(int seed)
+        {
+            EffectCardDef Fireball() => new EffectCardDef
+            {
+                Name = "火球术", Cost = 2,
+                Effects = new[]
+                {
+                    new EffectGroupDef
+                    {
+                        Target = TargetMode.Chosen,
+                        Ops = new EffectOp[] { new DamageOp { Amount = ScopedValue.Const(4) } },
+                    },
+                },
+            };
+            EffectCardDef Spark() => new EffectCardDef
+            {
+                Name = "电火花", Cost = 1,
+                Effects = new[]
+                {
+                    new EffectGroupDef
+                    {
+                        Target = TargetMode.Chosen,
+                        Ops = new EffectOp[] { new DamageOp { Amount = ScopedValue.Const(2) } },
+                    },
+                },
+            };
+            MonsterCardDef Monster(string name, int cost, int attack, int maxHp) =>
+                new MonsterCardDef { Name = name, Cost = cost, Attack = attack, MaxHp = maxHp };
+
+            BattleSetup setup = new BattleSetup
+            {
+                PlayerHp = 30, EnemyHp = 30, InitialEnergy = 2, RandomSeed = seed,
+                EnemySummons = { Monster("小鬼", 0, 2, 3), Monster("小鬼", 0, 2, 3), Monster("食人魔", 0, 4, 5) },
+            };
+            setup.Deck.AddRange(new BattleCard[]
+            {
+                BattleCard.Of(Monster("幼狼", 2, 2, 2)), BattleCard.Of(Spark()), BattleCard.Of(Monster("石像", 3, 3, 4)),
+                BattleCard.Of(Fireball()), BattleCard.Of(Monster("幼狼", 2, 2, 2)), BattleCard.Of(Spark()),
+                BattleCard.Of(Fireball()), BattleCard.Of(Monster("石像", 3, 3, 4)), BattleCard.Of(Monster("幼狼", 2, 2, 2)),
+                BattleCard.Of(Fireball()), BattleCard.Of(Spark()), BattleCard.Of(Monster("石像", 3, 3, 4)),
+            });
+            return setup;
         }
     }
 }
