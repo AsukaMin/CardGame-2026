@@ -42,15 +42,16 @@ public abstract class UIWindow : MonoBehaviour
     public virtual void OnShow(UIParam param) { }    // 每次打开：吃参数、刷新显示
     public virtual void OnHide() { }                 // 隐藏：退订事件、停动画
 
-    // 控件引用：预序列化引用表（见下节），GetButton("key") / GetText("key") 按取用
+    // 控件引用：预序列化引用表，载体是同节点的 UITable 组件（RequireComponent 自动带上，见下节），
+    // GetButton("key") / GetText("key") 按取用（转发到 Table）
 }
 ```
 
 ### 控件引用：命名扫描 + 预序列化
 
-窗口里的控件引用不在运行时按名字查找，一律编辑期解决：
+窗口里的控件引用不在运行时按名字查找，一律编辑期解决。引用表载体是 **UITable 组件**（挂窗口脚本时 RequireComponent 自动带上；也可脱离窗口单独挂在列表项/小部件预制体上用）：
 
-1. 预制体里给控件按约定命名（Hierarchy 选中节点右键 `GameObject/UIWindow/改名为 …` 一键完成）：
+1. 预制体里给控件按约定命名（Hierarchy 选中节点右键 `GameObject/UITable/改名为 …` 一键完成）：
 
    | 节点名 | 含义 | 代码取用 |
    |---|---|---|
@@ -59,11 +60,16 @@ public abstract class UIWindow : MonoBehaviour
    | `&_text_key_&` | TMP_Text | `GetText("key")` |
    | `&_gameobject_key_&` | 任意节点 | `GetGameObject("key")` |
    | `$_node_key_$` | 嵌套子窗口（扫描到此为止，不深入） | `GetWindow("key")` |
+   | `$_table_key_$` | 嵌套引用表（扫描到此为止，不深入） | `GetTable("key")` |
 
-2. 选中窗口根节点，Inspector 点"扫描子节点"（Editor/UIWindowEditor）：递归收集所有约定命名的控件，把组件引用随预制体序列化保存；重名 key 自动加后缀改名消解。
+2. 选中要扫描的根节点，在该节点的 UITable 组件 Inspector 点"扫描子节点"（Editor/UITableEditor）：递归收集所有约定命名的控件，把组件引用随预制体序列化保存；重名 key 自动加后缀改名消解。
 3. 运行时只把序列化列表搬进字典，按 key 取用，零 Find/零 GetComponent。
 
 完整工作流与注意事项见《UI框架-控件引用预序列化》。
+
+### 控件事件：UIEventListener
+
+控件级输入交互（按下/悬浮/拖拽/滚轮/选中等）不靠 Button.onClick 硬凑，统一挂 UIEventListener——EventSystem 全部输入接口适配成 C# 事件，`transform.GetListener().PointDown += ...` 直接订阅；与引用表配合：`GetGameObject("key").transform.GetListener()`。Button 节点的点击仍走 onClick，二者按交互类型分工。设计详见《UI框架-控件事件监听UIEventListener》。
 
 ### UIManager.cs —— 三层管理器
 
@@ -259,4 +265,4 @@ UiEvents.cs       // UI 自己的事：弹窗关闭、红点变化
 
 > **逻辑核心对 UI 只有事件（说事实），UI 对逻辑核心只有方法（下命令），窗口对窗口先考虑回调（父子对话），事件只留给"多个窗口共同关心的一件事"。**
 
-整套 UI 框架两三百行：一个管理器 + 一个窗口基类 + 一个参数包 + 几个静态事件类。没有反射、没有运行时查找、没有异步链，复杂度全部留给卡牌玩法本身。
+整套 UI 框架两三百行：一个管理器 + 一个窗口基类 + 一张预序列化引用表（UITable）+ 一个参数包 + 几个静态事件类。没有反射、没有运行时查找、没有异步链，复杂度全部留给卡牌玩法本身。
