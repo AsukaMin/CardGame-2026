@@ -126,6 +126,52 @@ namespace Battle.Tests
         }
 
         [Test]
+        public void 中毒_周期跳伤到期_标签随效授予与移除()
+        {
+            ApplyEffectOp apply = (ApplyEffectOp)catalog.Get(1007).Effect.Effects[0].Ops[0];
+            Assert.That(apply.Effect.Rounds, Is.EqualTo(4), "真文件形状锁定：rounds=4");
+            Assert.That(apply.Effect.GrantedTags, Is.EqualTo(new[] { "Keyword.Poison" }));
+            Assert.That(apply.Effect.PeriodicEachRound, Is.True);
+
+            BattleSession session = NewSession(new[] { 1007, 1003, 1003, 1003, 1003, 1003 });
+            session.Start();
+            session.PlayEffectCard(0, session.EnemyLeader.Id); // 挂毒敌方主战者
+
+            Assert.That(session.EnemyLeader.HasTag("Keyword.Poison"), Is.True, "grantedTags：中毒期间拥有标签");
+            Assert.That(session.EnemyHp, Is.EqualTo(30), "挂上不跳伤");
+
+            session.EndTurn(); // 敌方回合开始 tick1 + 我方回合开始 tick2：-4
+            Assert.That(session.EnemyHp, Is.EqualTo(26), "每 tick 按配置 2 伤");
+            Assert.That(session.EnemyLeader.HasTag("Keyword.Poison"), Is.True, "未到期标签仍在");
+
+            session.EndTurn(); // tick3 + tick4 → 到期移除
+            Assert.That(session.EnemyHp, Is.EqualTo(22), "四次共 8 伤");
+            Assert.That(session.EnemyLeader.HasTag("Keyword.Poison"), Is.False, "到期标签随效摘除");
+
+            session.EndTurn();
+            Assert.That(session.EnemyHp, Is.EqualTo(22), "到期不再跳伤");
+        }
+
+        [Test]
+        public void 中毒_跳伤致死怪兽_效果随实体清场()
+        {
+            BattleSession session = NewSession(new[] { 1007, 1003, 1003, 1003, 1003, 1003 }, Monster("毒囊兽", 0, 3));
+            session.Start();
+            session.EndTurn(); // 敌方召唤毒囊兽（0 攻 3 血）
+
+            Assert.That(session.EnemyBoard.Count, Is.EqualTo(1));
+            SkillEntity victim = session.EnemyBoard[0];
+            session.PlayEffectCard(0, victim.Id); // 我方回合挂毒（2 伤/跳）
+            Assert.That(victim.HasTag("Keyword.Poison"), Is.True);
+
+            session.EndTurn(); // tick1（3→1，敌方回合开始）+ tick2（1→0，我方回合开始）→ 死亡清扫
+
+            Assert.That(session.EnemyBoard, Is.Empty, "跳伤致死离场");
+            Assert.That(victim.HasTag("Keyword.Poison"), Is.False, "效果随实体移除，授予标签一并摘除");
+            Assert.That(session.PlayerHp, Is.EqualTo(30), "0 攻怪兽无伤（对照组）");
+        }
+
+        [Test]
         public void 抽牌op_JSON往返保真()
         {
             string json = SkillJson.Serialize(new DrawCardsOp { Count = 3 });

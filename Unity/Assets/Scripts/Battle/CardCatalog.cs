@@ -12,9 +12,15 @@ namespace Battle
     {
         readonly Dictionary<int, BattleCard> byId;
 
-        static CardCatalog() =>
-            // 内置表含抽牌卡（DrawCardsOp）——加载入口保证其判别可解析；幂等，BattleSession 构造时也会登记
+        static CardCatalog()
+        {
+            // 加载入口的完整前置（幂等）：宿主 op 判别可解析 + 内置标签已声明——
+            // 标签声明在各静态类的字段初始化器里，不触碰类型就不执行，巡检会误报"未声明的标签"
+            //（首张带标签的卡「剧毒」暴露的引导缺口）。
             SkillJson.TryRegisterOp<DrawCardsOp>("DrawCards");
+            SkillTags.EnsureDeclared();
+            BattleEventTags.EnsureDeclared();
+        }
 
         CardCatalog(Dictionary<int, BattleCard> byId) => this.byId = byId;
 

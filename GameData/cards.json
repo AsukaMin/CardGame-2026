@@ -199,5 +199,56 @@
         "playAfterAnimation": false
       }
     ]
+  },
+  {
+    "kind": "effect",
+    "id": 1007,
+    "name": "剧毒",
+    "cost": 1,
+    "effects": [
+      {
+        "target": "Chosen",
+        "ops": [
+          {
+            "op": "ApplyEffect",
+            "effect": {
+              "name": "剧毒",
+              "assetTags": [
+                "Keyword.Poison"
+              ],
+              "grantedTags": [
+                "Keyword.Poison"
+              ],
+              "duration": "Rounds",
+              "rounds": 4,
+              "periodicEachRound": true,
+              "periodicEffects": {
+                "target": "Self",
+                "ops": [
+                  {
+                    "op": "Damage",
+                    "amount": {
+                      "kind": "Const",
+                      "value": 2.0,
+                      "key": "",
+                      "attribute": "Attack",
+                      "coefficient": 1.0,
+                      "useSnapshot": false
+                    },
+                    "kind": "Effect"
+                  }
+                ],
+                "playAfterAnimation": false
+              },
+              "stackBy": "ByTarget",
+              "stackLimit": 3,
+              "stackRefreshDuration": true,
+              "expirePerStack": false
+            }
+          }
+        ],
+        "playAfterAnimation": false
+      }
+    ]
   }
 ]

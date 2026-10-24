@@ -33,7 +33,8 @@ UIEventListener 一个组件把全部接口适配成 17 个 C# 事件，窗口�
 
 ```csharp
 UIEventListener l1 = UIEventListener.GetListener(transform);   // 静态入口（get-or-add：没有就自动补挂）
-UIEventListener l2 = transform.GetListener();                  // 扩展调用糖
+UIEventListener l2 = transform.GetListener();                  // 扩展调用糖（Transform）
+UIEventListener l3 = gameObject.GetListener();                 // 扩展调用糖（GameObject——UITable.GetGameObject(key) 的返回值直连）
 ```
 
 窗口里与引用表配合——按 key 取节点，再挂监听：

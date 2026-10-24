@@ -9,6 +9,9 @@ namespace Battle
         public static readonly SkillTag UnitSummoned = TagRegistry.Declare("Event.Unit.Summoned");
         public static readonly SkillTag UnitDied = TagRegistry.Declare("Event.Unit.Died");
         public static readonly SkillTag CardDrawn = TagRegistry.Declare("Event.Card.Drawn");
+
+        /// <summary>强制触发本类的静态标签声明（加载入口在反序列化前调用）。触碰字段保证类型初始化器执行。</summary>
+        public static void EnsureDeclared() => _ = TurnStarted;
     }
 
     /// <summary>种子随机源（确定性铁律：同种子同操作=同终局）。</summary>

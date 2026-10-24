@@ -338,4 +338,7 @@ public class UIEventListener : MonoBehaviour, IPointerEnterHandler,
 public static class UIEventListenerExtensions
 {
     public static UIEventListener GetListener(this Transform tf) => UIEventListener.GetListener(tf);
+
+    /// <summary>GameObject 调用糖：UITable.GetGameObject(key) 的返回值直接链式挂监听，省一次 .transform。</summary>
+    public static UIEventListener GetListener(this GameObject go) => UIEventListener.GetListener(go.transform);
 }

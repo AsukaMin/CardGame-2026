@@ -214,5 +214,9 @@ namespace Battle
 
         /// <summary>事前时点标签名约定后缀（Timing.Preview 只允许订阅 *.Preview 标签）。</summary>
         public const string PreviewSuffix = ".Preview";
+
+        /// <summary>强制触发本类的静态标签声明（加载入口在反序列化前调用——标签须先 Declare 再巡检）。
+        /// 触碰静态字段保证类型初始化器执行（beforefieldinit 语义下仅调方法不保证）。</summary>
+        public static void EnsureDeclared() => _ = KeywordTaunt;
     }
 }
