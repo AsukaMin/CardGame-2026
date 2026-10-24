@@ -15,9 +15,6 @@ Unity/obj/
 PatchSource/
 Build/
 
-# TMP 字体资产超 GitHub 100MB 限制，只留本地不进库（需要时在 Unity 里对字体右键重新生成）
-Unity/Assets/Font/*.asset
-
 # 素材库是独立仓库（单独给美术开权限），不进本仓库
 CardGame_Arts/
 
