@@ -275,7 +275,7 @@ MonoBehaviour:
   fullscreenLayer: {fileID: 0}
   popupLayer: {fileID: 0}
   tipLayer: {fileID: 0}
-  startWindow: 
+  startWindow: EntryWindow
 --- !u!4 &1510149599
 Transform:
   m_ObjectHideFlags: 0

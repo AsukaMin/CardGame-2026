@@ -33,7 +33,7 @@ public static class DotweenHelper
     /// <summary>
     /// 弹窗弹开：缩放 0.85→1（OutBack）+ CanvasGroup 淡入（没有会自动补挂），动画期间不可交互。
     /// withDim=true 时在窗口正下方垫一张全屏黑色遮罩（模态：挡住下层点击）随窗淡入；
-    /// 传 onDimClick 则遮罩可点击（典型写法：() => UIManager.I.Back()）。返回 Sequence 供续接。
+    /// 传 onDimClick 则遮罩可点击（典型写法：() => UIManager.Instance.Back()）。返回 Sequence 供续接。
     /// </summary>
     public static Sequence PopOpen(UIWindow win, bool withDim = true, Action onDimClick = null,
                                    float duration = PopOpenDuration, float dimAlpha = DimAlpha)
@@ -57,7 +57,7 @@ public static class DotweenHelper
 
     /// <summary>
     /// 弹窗收起：缩放+淡出，播完把窗口复位成干净状态（缓存复用的窗口下次打开才不会歪），
-    /// 然后回调 onComplete——典型写法：PopClose(this, () => UIManager.I.Hide(nameof(XxxWindow)))。
+    /// 然后回调 onComplete——典型写法：PopClose(this, () => UIManager.Instance.Hide(nameof(XxxWindow)))。
     /// 时序是"先动画、动画完了再 Hide"，UIManager.Hide 本身保持瞬时不动。
     /// </summary>
     public static Sequence PopClose(UIWindow win, Action onComplete = null, float duration = PopCloseDuration)

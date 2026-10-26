@@ -6,7 +6,7 @@ using System.Collections.Generic;
 ///   var p = new UIParam { OpenType = "Edit" };
 ///   p.Set("DeckId", 1001);
 ///   p.Set("OnPicked", (Action&lt;int&gt;)(cardId =&gt; AddToDeck(cardId)));
-///   UIManager.I.Show("ShopWindow", p);
+///   UIManager.Instance.Show("ShopWindow", p);
 /// </summary>
 public class UIParam
 {

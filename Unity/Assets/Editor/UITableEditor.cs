@@ -86,7 +86,7 @@ public class UITableEditor : Editor
         }
 
         var rawName = go.name;
-        var key = NormalizeKey(rawName);
+        var key = ExtractKey(rawName);
         var newName = BuildPattern(mode, key, prefix);
 
         var finalName = newName;
@@ -134,6 +134,33 @@ public class UITableEditor : Editor
         result = Regex.Replace(result, "_+", "_");
         result = result.Trim('_');
         return string.IsNullOrEmpty(result) ? "unnamed" : result;
+    }
+
+    // 从旧名字提取 key：先剥掉已有的 &_type_key_& / $_node_key_$ 包装，再清掉残留的开头类型词，
+    // 否则重复执行改名菜单会让类型词逐次堆叠（&_text_text_name_&）
+    private static string ExtractKey(string rawName)
+    {
+        var inner = rawName;
+
+        var mAmp = Regex.Match(inner, "^&_[A-Za-z0-9]+_(.+)_&$");
+        if (mAmp.Success)
+        {
+            inner = mAmp.Groups[1].Value;
+        }
+        else
+        {
+            var mDollar = Regex.Match(inner, "^\\$_(?:node|table)_(.+)_\\$$");
+            if (mDollar.Success) inner = mDollar.Groups[1].Value;
+        }
+
+        var key = NormalizeKey(inner);
+
+        while (Regex.IsMatch(key, "^(node|table|image|button|text|gameobject)_", RegexOptions.IgnoreCase))
+            key = Regex.Replace(key, "^(node|table|image|button|text|gameobject)_", "", RegexOptions.IgnoreCase);
+
+        key = Regex.Replace(key, "^(node|table|image|button|text|gameobject)$", "", RegexOptions.IgnoreCase);
+
+        return string.IsNullOrEmpty(key) ? "unnamed" : key;
     }
 
     private static string MakeUniqueKey(string key, HashSet<string> usedKeys)

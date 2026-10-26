@@ -27,12 +27,12 @@ public class MyPopup : UIWindow
     protected override void OnHide() => DotweenHelper.KillWindowTweens(this);   // ② 停动画兜底
 
     void OnCloseClick()   // 关闭按钮（OnCreate 里 GetButton("close").onClick.AddListener 注册）
-        => DotweenHelper.PopClose(this, () => UIManager.I.Hide(nameof(MyPopup)));   // ③ 先动画再关
+        => DotweenHelper.PopClose(this, () => UIManager.Instance.Hide(nameof(MyPopup)));   // ③ 先动画再关
 }
 ```
 
 - **时序**：`UIManager.Hide` 保持瞬时不动；动画顺序是"播收起动画 → 播完才 Hide"。
-- **遮罩点击关窗**：`DotweenHelper.PopOpen(this, onDimClick: () => UIManager.I.Back())`。
+- **遮罩点击关窗**：`DotweenHelper.PopOpen(this, onDimClick: () => UIManager.Instance.Back())`。
 - **不要遮罩**（比如弹窗本身半屏且想留着下层可点）：`PopOpen(this, withDim: false)`。
 
 ## 四、API 一览

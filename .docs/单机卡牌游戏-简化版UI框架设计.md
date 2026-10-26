@@ -74,10 +74,9 @@ public abstract class UIWindow : MonoBehaviour
 ### UIManager.cs —— 三层管理器
 
 ```csharp
-public class UIManager : MonoBehaviour
+// 单例经 Tool.MonoSingleton（Scripts/Tools）：子类不写 Awake（会隐藏基类注册逻辑），初始化在 override Init()
+public class UIManager : MonoSingleton<UIManager>
 {
-    public static UIManager I { get; private set; }
-
     [SerializeField] Transform fullscreenLayer;   // 全屏窗：互斥，开新顶旧
     [SerializeField] Transform popupLayer;        // 弹窗：可叠加，按栈回退
     [SerializeField] Transform tipLayer;          // 提示：过路即走
@@ -85,7 +84,7 @@ public class UIManager : MonoBehaviour
     readonly Dictionary<string, UIWindow> cache = new Dictionary<string, UIWindow>();
     readonly List<string> popupStack = new List<string>();
 
-    void Awake() { I = this; }
+    // 单例注册/防重/自动创建在 MonoSingleton（访问 Instance 时场景没有就建一个；禁域重载跨 Play 自愈）
 
     public void Show(string winName, UIParam param = null)
     {
@@ -141,7 +140,7 @@ public class UIParam
 UIParam p = new UIParam();
 p.OpenType = "Edit";
 p.Set("DeckId", 1001);
-UIManager.I.Show("DeckWindow", p);
+UIManager.Instance.Show("DeckWindow", p);
 ```
 
 ## 四、跨窗口通信：三条通道
@@ -229,7 +228,7 @@ public class CardPickWindow : UIWindow
     public void OnCardClicked(int cardId)
     {
         onPicked?.Invoke(cardId);
-        UIManager.I.Hide("CardPickWindow");
+        UIManager.Instance.Hide("CardPickWindow");
     }
 }
 
@@ -237,7 +236,7 @@ public class CardPickWindow : UIWindow
 UIParam p = new UIParam();
 p.Set("CandidateIds", ownedCardIds);
 p.Set("OnPicked", (Action<int>)(cardId => AddToDeck(cardId)));
-UIManager.I.Show("CardPickWindow", p);
+UIManager.Instance.Show("CardPickWindow", p);
 ```
 
 什么时候用事件做 UI↔UI：**多个窗口要同时知道同一件事**（如货币变化，主界面/商店/卡包页都要刷）。

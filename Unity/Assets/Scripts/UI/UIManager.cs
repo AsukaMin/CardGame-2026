@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Tool;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
@@ -7,27 +8,24 @@ using UnityEngine.UI;
 /// <summary>
 /// 三层 UI 管理器：全屏层互斥（开新顶旧）、弹窗层可叠加（Back 按栈回退）、提示层过路即走。
 /// 窗口同步加载 Resources/UI/预制体（约定：预制体名=窗口类名），缓存复用、隐藏不销毁（ET 同款策略）。
-/// 全项目只有这一个类知道窗口预制体在哪，其他代码开窗一律 UIManager.I.Show(...)。
-/// 用法一：场景里手工搭好三个层节点，拖进下面三个字段。
-/// 用法二：什么都不拖，把本组件挂到任意物体上，Awake 自动建 Canvas + EventSystem + 三层。
+/// 全项目只有这一个类知道窗口预制体在哪，其他代码开窗一律 UIManager.Instance.Show(...)。
+/// 单例经 Tool.MonoSingleton（Scripts/Tools）：本类不写 Awake（写了会隐藏基类注册逻辑），
+/// 初始化在 Init——层字段没拖引用时自动建 Canvas + EventSystem + 三层。
+/// 场景忘了挂也能用：首次访问 Instance 自动建物体；但 startWindow 等序列化字段只在场景物体上生效。
 /// </summary>
-public class UIManager : MonoBehaviour
+public class UIManager : MonoSingleton<UIManager>
 {
-    public static UIManager I { get; private set; }
-
     [SerializeField] Transform fullscreenLayer; // 全屏窗：互斥，开新顶旧
     [SerializeField] Transform popupLayer;      // 弹窗：可叠加，按栈回退
     [SerializeField] Transform tipLayer;        // 提示：过路即走
-    [SerializeField] string startWindow;        // 可选：Start 后自动打开的第一扇窗（如 MainMenu）
+    [SerializeField] string startWindow;        // 可选：Start 后自动打开的第一扇窗（如 EntryWindow）
 
     readonly Dictionary<string, UIWindow> cache = new Dictionary<string, UIWindow>();
     readonly List<string> popupStack = new List<string>();
     string fullscreenNow; // 当前显示着的全屏窗名
 
-    void Awake()
+    protected override void Init()
     {
-        if (I != null && I != this) { Destroy(gameObject); return; }
-        I = this;
         if (fullscreenLayer == null) BuildDefaultRoot(); // 没拖引用就自己搭一套
     }
 

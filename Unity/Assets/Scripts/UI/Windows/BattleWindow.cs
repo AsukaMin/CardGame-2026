@@ -29,7 +29,7 @@ public sealed class BattleWindow : UIWindow
     readonly List<string> logLines = new List<string>();
     readonly List<RaycastResult> raycastBuffer = new List<RaycastResult>();
 
-    BattleSession Session => BattleController.I != null ? BattleController.I.Session : null;
+    BattleSession Session => BattleController.Instance.Session; // MonoSingleton 永不为 null；未开局时 Session 为 null
 
     // ==================== 生命周期 ====================
 
@@ -97,11 +97,12 @@ public sealed class BattleWindow : UIWindow
 
     void On(BattleEnded e)
     {
-        // M3 临时：ResultWindow 未做——胜负走 Console + logText；重开按 R（BattleController.Update）
-        string msg = e.PlayerWon ? "胜利！" : "失败…";
-        AppendLog($"终局 —— {msg}");
-        Debug.Log($"[BattleWindow] 终局 —— {msg}（M3 临时无 ResultWindow：按 R 重开一局）");
+        // 先把终局状态刷到战场上（弹窗压在上面，底下应是最终局面），再弹终局窗
+        AppendLog($"终局 —— {(e.PlayerWon ? "胜利！" : "失败…")}");
         RefreshAll();
+        var param = new UIParam();
+        param.Set("PlayerWon", e.PlayerWon);
+        UIManager.Instance.Show("ResultWindow", param); // 胜负经 UIParam 带入（MonoSingleton 永不为 null）
     }
 
     // ==================== 全量刷新（只读轮询 session；盾不在事件载荷里，只能轮询——M2 定案） ====================
