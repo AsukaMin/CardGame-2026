@@ -1,0 +1,28 @@
+[
+  {
+    "id": 3001,
+    "name": "哥布林前哨",
+    "leaderHp": 22,
+    "summons": [
+      { "id": 2003, "count": 6 }
+    ]
+  },
+  {
+    "id": 3002,
+    "name": "演武场守卫",
+    "leaderHp": 30,
+    "summons": [
+      { "id": 2003, "count": 2 },
+      { "id": 2004, "count": 1 }
+    ]
+  },
+  {
+    "id": 3003,
+    "name": "深渊霸主",
+    "leaderHp": 45,
+    "summons": [
+      { "id": 2002, "count": 1 },
+      { "id": 2004, "count": 2 }
+    ]
+  }
+]
