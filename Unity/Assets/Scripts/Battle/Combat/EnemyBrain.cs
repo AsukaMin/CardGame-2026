@@ -29,9 +29,16 @@ namespace Battle
             }
         }
 
-        /// <summary>目标选择占位：玩家主战者与我方在场怪兽等权随机。</summary>
+        /// <summary>目标选择占位：玩家主战者与我方在场怪兽等权随机；
+        /// 玩家场上存在嘲讽单位（Keyword.Taunt）时只能攻击嘲讽单位（M5·T4 嘲讽规则——玩法规则非框架）。</summary>
         SkillEntity PickTarget(BattleSession session)
         {
+            List<SkillEntity> taunts = new List<SkillEntity>();
+            foreach (SkillEntity unit in session.PlayerBoard)
+                if (unit.Tags.Has(SkillTags.KeywordTaunt)) taunts.Add(unit);
+            if (taunts.Count > 0)
+                return session.Random.Pick((IReadOnlyList<SkillEntity>)taunts);
+
             List<SkillEntity> candidates = new List<SkillEntity> { session.PlayerLeader };
             candidates.AddRange(session.PlayerBoard);
             return session.Random.Pick((IReadOnlyList<SkillEntity>)candidates);

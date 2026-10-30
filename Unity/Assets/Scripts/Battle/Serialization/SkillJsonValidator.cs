@@ -99,7 +99,10 @@ namespace Battle
         static void VisitBattleCard(BattleCard card, string path)
         {
             if (card?.Effect != null)
+            {
                 VisitList(card.Effect.Effects, $"{path}.effects", VisitGroup);
+                VisitList(card.Effect.Triggers, $"{path}.triggers", VisitTrigger);
+            }
             // 怪兽卡体无标签位。
         }
 

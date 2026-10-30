@@ -21,6 +21,8 @@ namespace Battle
         public Dictionary<string, double> SetByCaller;
         /// <summary>最近结算结果（DamageResult/HealResult），供后续 op 与宿主引用。</summary>
         public object LastResult;
+        /// <summary>正在打出的卡 id（M5·缺口§2/§3 归因与复制卡的载体；0=非打牌上下文，如普攻/触发链）。</summary>
+        public int CardId;
 
         public double GetSetByCaller(string key) =>
             SetByCaller != null && SetByCaller.TryGetValue(key, out double v) ? v : 0;
@@ -69,7 +71,7 @@ namespace Battle
             SkillEntity target = ctx.CurrentTarget;
             if (target == null) return;
             double amount = engine.Evaluate(op.Amount, ctx);
-            ctx.LastResult = engine.ResolveDamage(ctx.Source, target, amount, op.Kind);
+            ctx.LastResult = engine.ResolveDamage(ctx.Source, target, amount, op.Kind, ctx);
         }
     }
 
@@ -81,7 +83,7 @@ namespace Battle
             SkillEntity target = ctx.CurrentTarget;
             if (target == null) return;
             double amount = engine.Evaluate(op.Amount, ctx);
-            ctx.LastResult = engine.ResolveHeal(ctx.Source, target, amount);
+            ctx.LastResult = engine.ResolveHeal(ctx.Source, target, amount, ctx);
         }
     }
 
@@ -239,6 +241,28 @@ namespace Battle
         }
     }
 
+    /// <summary>事件来源卡判定：事件载荷的归因卡 id 与配置相等（仅触发上下文有效）。</summary>
+    public sealed class EventSourceCardConditionSpec : ConditionSpec
+    {
+        public override bool Eval(SkillContext ctx, SkillEntity subject)
+        {
+            if (!ctx.Event.IsValid) return false;
+            EventSourceCardCondition c = (EventSourceCardCondition)Data;
+            return ctx.Event.CardId == c.CardId && c.CardId != 0;
+        }
+    }
+
+    /// <summary>上一伤害击杀判定：LastResult 为伤害结算且其目标当前血 ≤0（求值对象无关）。</summary>
+    public sealed class LastDamageKilledConditionSpec : ConditionSpec
+    {
+        public override bool Eval(SkillContext ctx, SkillEntity subject)
+        {
+            return ctx.LastResult is DamageResult dr
+                && dr.Target != null
+                && dr.Target.Attributes.Current(AttributeId.CurrentHp) <= 0;
+        }
+    }
+
     // ==================== 工厂 ====================
 
     /// <summary>类型路由工厂（内置 op/条件；宿主自定义 op 经 engine.RegisterOp 走实例级注册表优先）。</summary>
@@ -267,6 +291,8 @@ namespace Battle
                 case AttributeCompareCondition _: return new AttributeCompareConditionSpec { Data = data };
                 case EventValueCondition _: return new EventValueConditionSpec { Data = data };
                 case HasTagCondition _: return new HasTagConditionSpec { Data = data };
+                case EventSourceCardCondition _: return new EventSourceCardConditionSpec { Data = data };
+                case LastDamageKilledCondition _: return new LastDamageKilledConditionSpec { Data = data };
                 default: return null;
             }
         }

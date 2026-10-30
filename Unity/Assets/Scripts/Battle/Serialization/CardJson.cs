@@ -41,8 +41,11 @@ namespace Battle
                 PopulateDef(obj, def, serializer);
                 if (def.Name.Length == 0)
                     throw new JsonSerializationException($"卡 #{id} name 为空（配置错误，加载期暴露）");
-                if (def.Effects == null || def.Effects.Length == 0)
-                    throw new JsonSerializationException($"卡 #{id}（{def.Name}）效果卡无效果载荷 effects（配置错误，加载期暴露）");
+                bool hasEffects = def.Effects != null && def.Effects.Length > 0;
+                bool hasTriggers = def.Triggers != null && def.Triggers.Length > 0;
+                if (!hasEffects && !hasTriggers)
+                    throw new JsonSerializationException(
+                        $"卡 #{id}（{def.Name}）效果卡无效果载荷：effects 与 triggers 至少其一非空（M5 起纯触发卡合法，配置错误，加载期暴露）");
                 card = BattleCard.Of(def);
             }
             else
@@ -55,6 +58,7 @@ namespace Battle
                     throw new JsonSerializationException($"卡 #{id}（{def.Name}）maxHp 必须为正（配置错误，加载期暴露）");
                 card = BattleCard.Of(def);
             }
+            card.Id = id; // 信封 id 注入卡身份（归因/复制卡用；卡体字段不进 JSON）
             return new CardEntry { Id = id, Card = card };
         }
 

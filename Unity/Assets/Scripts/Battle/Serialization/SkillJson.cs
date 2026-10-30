@@ -36,6 +36,8 @@ namespace Battle
             ConditionRegistry.Register<AttributeCompareCondition>("AttributeCompare");
             ConditionRegistry.Register<EventValueCondition>("EventValue");
             ConditionRegistry.Register<HasTagCondition>("HasTag");
+            ConditionRegistry.Register<EventSourceCardCondition>("EventSourceCard");
+            ConditionRegistry.Register<LastDamageKilledCondition>("LastDamageKilled");
         }
 
         /// <summary>登记宿主自定义 op 的判别名（镜像 engine.RegisterOp 的扩展点；先登记后序列化）。</summary>

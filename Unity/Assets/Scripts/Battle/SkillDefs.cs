@@ -89,6 +89,24 @@ namespace Battle
         public bool Exact;
     }
 
+    /// <summary>
+    /// 事件来源卡判定（M5·缺口§2 清偿）："当**这张卡**造成伤害时"——比较事件载荷的归因卡 id。
+    /// 仅触发上下文有效（求值 ctx.Event.CardId）；数据侧用"卡 JSON 自引 id"的约定（打出的卡带自己的 id）。
+    /// </summary>
+    [Serializable]
+    public sealed class EventSourceCardCondition : ConditionDef
+    {
+        public int CardId;
+    }
+
+    /// <summary>
+    /// 上一伤害击杀判定（M5·缺口§1 清偿）："击杀敌人→自己回血/抽牌"跨效果组门控的条件记忆词汇。
+    /// 读 ctx.LastResult：最近一次结算为伤害且其目标当前血 ≤0 即真（治疗/无结算覆盖 LastResult 时为假）。
+    /// 与求值对象无关（不查 subject，查执行链记忆）。
+    /// </summary>
+    [Serializable]
+    public sealed class LastDamageKilledCondition : ConditionDef { }
+
     /// <summary>触发时机：After=事后响应；Preview=事前改写（仅 *.Preview 标签合法，注册时校验）。</summary>
     public enum TriggerTiming { After, Preview }
 
@@ -100,6 +118,8 @@ namespace Battle
         public TriggerTiming Timing = TriggerTiming.After;
         /// <summary>仅当事件承受者=宿主单位时触发（"我受伤时反弹"类个人被动的必备开关；世界级触发器忽略）。</summary>
         public bool SelfOnly;
+        /// <summary>仅当事件引发者=宿主时触发（SelfOnly 的镜像："当**它**造成伤害时成长"；世界级触发器忽略）。</summary>
+        public bool SourceOnly;
         /// <summary>可选：对事件承受者求值的条件。</summary>
         public ConditionDef Filter;
         /// <summary>可选：对事件数值求值的过滤。</summary>

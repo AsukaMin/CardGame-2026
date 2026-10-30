@@ -16,6 +16,10 @@ namespace Battle
         public readonly SkillEntity Target;
         public readonly double Magnitude;
         public readonly DamageSourceKind Kind;
+        /// <summary>归因卡 id（M5·缺口§2）："当**这张卡**造成伤害时"可查；0=非打牌上下文（普攻/触发链/周期）。</summary>
+        public readonly int CardId;
+        /// <summary>护盾吸收明细（M5 事实字段授权位）：Magnitude 仍=实际扣血（定案不动），吸收量走本旁位。</summary>
+        public readonly double ShieldAbsorbed;
 
         public GameplayEvent(SkillTag tag, SkillEntity instigator, SkillEntity target,
             double magnitude, DamageSourceKind kind)
@@ -25,6 +29,20 @@ namespace Battle
             Target = target;
             Magnitude = magnitude;
             Kind = kind;
+            CardId = 0;
+            ShieldAbsorbed = 0;
+        }
+
+        public GameplayEvent(SkillTag tag, SkillEntity instigator, SkillEntity target,
+            double magnitude, DamageSourceKind kind, int cardId, double shieldAbsorbed)
+        {
+            Tag = tag;
+            Instigator = instigator;
+            Target = target;
+            Magnitude = magnitude;
+            Kind = kind;
+            CardId = cardId;
+            ShieldAbsorbed = shieldAbsorbed;
         }
 
         public bool IsValid => Tag.IsValid;
@@ -209,9 +227,10 @@ namespace Battle
 
         // ==================== 伤害/治疗管线（三段） ====================
 
-        /// <summary>伤害：Preview 聚合改写 → 护盾吸收 → 落地（改 CurrentHp 的 Base）→ Applied 事件入队。</summary>
+        /// <summary>伤害：Preview 聚合改写 → 护盾吸收 → 落地（改 CurrentHp 的 Base）→ Applied 事件入队。
+        /// skillCtx 可选：携带打牌归因（CardId）进 Applied 事件载荷。</summary>
         public DamageResult ResolveDamage(SkillEntity source, SkillEntity target, double amount,
-            DamageSourceKind kind = DamageSourceKind.Effect)
+            DamageSourceKind kind = DamageSourceKind.Effect, SkillContext skillCtx = null)
         {
             DamageResult result = default;
             if (target == null) return result;
@@ -246,38 +265,41 @@ namespace Battle
                 target.Attributes.SetBase(AttributeId.CurrentHp,
                     target.Attributes.Base(AttributeId.CurrentHp) - final);
                 double actual = before - target.Attributes.Current(AttributeId.CurrentHp);
-                EnqueueEvent(SkillTags.EventDamageApplied, source, target, actual, kind);
+                EnqueueEvent(SkillTags.EventDamageApplied, source, target, actual, kind,
+                    skillCtx?.CardId ?? 0, shieldAbsorbed);
                 result = new DamageResult(target, actual, shieldAbsorbed);
             });
             return result;
         }
 
-        /// <summary>治疗：Preview 改写 → 落地（上限夹紧）→ Applied 事件入队。</summary>
-        public HealResult ResolveHeal(SkillEntity source, SkillEntity target, double amount)
+        /// <summary>治疗：Preview 改写 → 落地（上限夹紧）→ Applied 事件入队。skillCtx 可选：归因同伤害。</summary>
+        public HealResult ResolveHeal(SkillEntity source, SkillEntity target, double amount,
+            SkillContext skillCtx = null)
         {
             HealResult result = default;
             if (target == null) return result;
             Session(() =>
             {
-                HealContext ctx = new HealContext
+                HealContext heal = new HealContext
                 {
                     Source = source, Target = target, Amount = Math.Max(0, amount),
                 };
                 HealContext saved = pendingHeal;
-                pendingHeal = ctx;
+                pendingHeal = heal;
                 try
                 {
                     DispatchPreview(new GameplayEvent(
-                        SkillTags.EventHealPreview, source, target, ctx.Amount, DamageSourceKind.None));
+                        SkillTags.EventHealPreview, source, target, heal.Amount, DamageSourceKind.None));
                 }
                 finally { pendingHeal = saved; }
 
                 double before = target.Attributes.Current(AttributeId.CurrentHp);
                 double max = target.Attributes.Current(AttributeId.MaxHp);
                 target.Attributes.SetBase(AttributeId.CurrentHp,
-                    Math.Min(target.Attributes.Base(AttributeId.CurrentHp) + Math.Max(0, ctx.Amount), max));
+                    Math.Min(target.Attributes.Base(AttributeId.CurrentHp) + Math.Max(0, heal.Amount), max));
                 double actual = target.Attributes.Current(AttributeId.CurrentHp) - before;
-                EnqueueEvent(SkillTags.EventHealApplied, source, target, actual, DamageSourceKind.None);
+                EnqueueEvent(SkillTags.EventHealApplied, source, target, actual, DamageSourceKind.None,
+                    skillCtx?.CardId ?? 0, 0);
                 result = new HealResult(target, actual);
             });
             return result;
@@ -322,8 +344,8 @@ namespace Battle
         }
 
         internal void EnqueueEvent(SkillTag tag, SkillEntity instigator, SkillEntity target,
-            double magnitude, DamageSourceKind kind) =>
-            queue.Enqueue(new GameplayEvent(tag, instigator, target, magnitude, kind));
+            double magnitude, DamageSourceKind kind, int cardId = 0, double shieldAbsorbed = 0) =>
+            queue.Enqueue(new GameplayEvent(tag, instigator, target, magnitude, kind, cardId, shieldAbsorbed));
 
         void EnqueueEvent(GameplayEvent evt) => queue.Enqueue(evt);
 
@@ -336,6 +358,7 @@ namespace Battle
                 TriggerEntry entry = snapshot[i];
                 if (entry.Def.Timing != TriggerTiming.After || entry.Fired) continue;
                 if (entry.Def.SelfOnly && !ReferenceEquals(evt.Target, entry.Owner)) continue;
+                if (entry.Def.SourceOnly && entry.Owner != null && !ReferenceEquals(evt.Instigator, entry.Owner)) continue;
                 if (!evt.Tag.Matches(entry.Tag)) continue; // 事件标签拥有订阅标签（父订阅捕获子事件）
 
                 SkillContext filterCtx = new SkillContext
@@ -372,6 +395,7 @@ namespace Battle
                 TriggerEntry entry = snapshot[i];
                 if (entry.Def.Timing != TriggerTiming.Preview || entry.Fired) continue;
                 if (entry.Def.SelfOnly && !ReferenceEquals(evt.Target, entry.Owner)) continue;
+                if (entry.Def.SourceOnly && entry.Owner != null && !ReferenceEquals(evt.Instigator, entry.Owner)) continue;
                 if (!evt.Tag.Matches(entry.Tag)) continue;
 
                 SkillContext filterCtx = new SkillContext

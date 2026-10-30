@@ -83,32 +83,29 @@ namespace Battle
     }
 
     /// <summary>
-    /// 演示对局的组牌编排（M2 数据管线版）：按 id 从 CardCatalog 取卡组 deck。
-    /// 卡定义数值在 GameData/cards.json（数据侧）；组牌编排（id×张数）与敌方序列留代码侧——数据化归 M5 内容管线。
+    /// 对局编排（M5·T3 数据化版）：牌组与敌方阵容定义（GameData/decks.json / enemies.json）→ BattleSetup。
+    /// 卡定义、组牌、敌方阵容三层全部数据化；牌库顺序 = 条目序展开（count 连续重复）——抽牌顺序敏感，数据保序。
+    /// 牌组 1（演示牌组）与敌人 3002（演武场守卫）的展开序与退役的 M1 硬编码版逐值等价
+    /// （同种子零漂移锚定依赖它——《BattleFlowTests.M1HardcodedSetup》对照仍有效）。
     /// </summary>
     public static class DemoBattleData
     {
-        /// <summary>默认演示对局（30 对 30，12 张混合牌库，敌方依序召唤 小鬼×2 → 食人魔）。与 M1 硬编码版逐值等价。</summary>
-        public static BattleSetup CreateSetup(CardCatalog catalog, int seed = 0)
+        public static BattleSetup CreateSetup(CardCatalog catalog, DeckDef deck, EnemyDef enemy, int seed = 0)
         {
             BattleSetup setup = new BattleSetup
             {
                 PlayerHp = 30,
-                EnemyHp = 30,
+                EnemyHp = enemy.LeaderHp,
                 InitialEnergy = 2,
                 RandomSeed = seed,
+                Cards = catalog,
             };
-            setup.EnemySummons.AddRange(new[]
-            {
-                catalog.Get(2003).Monster, catalog.Get(2003).Monster, catalog.Get(2004).Monster,
-            }); // 小鬼×2 → 食人魔
-            setup.Deck.AddRange(new[]
-            {
-                catalog.Get(2001), catalog.Get(1002), catalog.Get(2002),
-                catalog.Get(1001), catalog.Get(2001), catalog.Get(1002),
-                catalog.Get(1001), catalog.Get(2002), catalog.Get(2001),
-                catalog.Get(1001), catalog.Get(1002), catalog.Get(2002),
-            }); // 幼狼×3 电火花×3 石像×3 火球×3（顺序与 M1 一致——同种子回归锚定依赖它）
+            foreach (DeckEntry entry in deck.Cards)
+                for (int i = 0; i < entry.Count; i++)
+                    setup.Deck.Add(catalog.Get(entry.Id));
+            foreach (EnemySummonEntry entry in enemy.Summons)
+                for (int i = 0; i < entry.Count; i++)
+                    setup.EnemySummons.Add(catalog.Get(entry.Id).Monster);
             return setup;
         }
     }

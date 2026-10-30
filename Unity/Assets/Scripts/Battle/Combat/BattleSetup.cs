@@ -17,6 +17,9 @@ namespace Battle
         /// <summary>玩家牌库（索引 0 = 顶，先抽）。</summary>
         public List<BattleCard> Deck = new List<BattleCard>();
 
+        /// <summary>卡表（M5：AddCardToHandOp 按 id 取卡的通路；null=该 op 不可用——测试/演示局可不注入）。</summary>
+        public CardCatalog Cards;
+
         /// <summary>起手手牌数。</summary>
         public int StartingHandSize = 3;
 

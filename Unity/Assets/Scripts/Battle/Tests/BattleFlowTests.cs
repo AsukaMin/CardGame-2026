@@ -321,15 +321,26 @@ namespace Battle.Tests
         // ==================== 完整对局（✅ 完成标准；M2 起牌组数据驱动） ====================
 
         static CardCatalog catalog;
+        static DeckDef demoDeck;
+        static EnemyDef guardEnemy;
 
         [OneTimeSetUp]
-        public void LoadCatalog() =>
+        public void LoadCatalog()
+        {
             catalog = CardCatalog.Load(File.ReadAllText(TestDataPaths.CardsJson()));
+            // M5·T3：组牌/敌方阵容数据化——锚定用牌组 1（演示牌组）与敌人 3002（演武场守卫），
+            // 展开序与退役的 M1 硬编码编排逐值等价，零漂移对照继续有效
+            demoDeck = DeckCatalog.Load(File.ReadAllText(TestDataPaths.DecksJson()), catalog).Get(1);
+            guardEnemy = EnemyCatalog.Load(File.ReadAllText(TestDataPaths.EnemiesJson()), catalog).Get(3002);
+        }
+
+        static BattleSetup DataSetup(int seed) =>
+            DemoBattleData.CreateSetup(catalog, demoDeck, guardEnemy, seed);
 
         [Test]
         public void 完整对局_自动跑完分出胜负()
         {
-            AutoBattleResult result = AutoBattle.Run(DemoBattleData.CreateSetup(catalog, seed: 123));
+            AutoBattleResult result = AutoBattle.Run(DataSetup(123));
             Assert.AreNotEqual(BattleResult.None, result.Result, "必须分出胜负");
             Assert.Greater(result.Turns, 0);
             Assert.LessOrEqual(result.Turns, AutoBattle.MaxTurns);
@@ -338,8 +349,8 @@ namespace Battle.Tests
         [Test]
         public void 完整对局_同种子重跑结果一致()
         {
-            AutoBattleResult a = AutoBattle.Run(DemoBattleData.CreateSetup(catalog, seed: 42));
-            AutoBattleResult b = AutoBattle.Run(DemoBattleData.CreateSetup(catalog, seed: 42));
+            AutoBattleResult a = AutoBattle.Run(DataSetup(42));
+            AutoBattleResult b = AutoBattle.Run(DataSetup(42));
             Assert.AreEqual(a.Result, b.Result, "同种子同操作=同终局（确定性）");
             Assert.AreEqual(a.Turns, b.Turns);
         }
@@ -350,7 +361,7 @@ namespace Battle.Tests
             int[] seeds = { 1, 2, 3, 4, 5, 20261019 /* 编辑器冒烟固定种子 */ };
             foreach (int seed in seeds)
             {
-                AutoBattleResult result = AutoBattle.Run(DemoBattleData.CreateSetup(catalog, seed: seed));
+                AutoBattleResult result = AutoBattle.Run(DataSetup(seed));
                 Assert.AreNotEqual(BattleResult.None, result.Result, $"种子 {seed} 必须分出胜负");
             }
         }
@@ -359,7 +370,7 @@ namespace Battle.Tests
         public void 完整对局_数据牌组固定种子锚定终局()
         {
             // M1 完成标准不能丢：六卡数值原值移植 cards.json → 同种子终局与 M1 硬编码版一致（数值移植零漂移证明）
-            AutoBattleResult result = AutoBattle.Run(DemoBattleData.CreateSetup(catalog, seed: 20261019));
+            AutoBattleResult result = AutoBattle.Run(DataSetup(20261019));
             Assert.AreEqual(BattleResult.Defeat, result.Result, "锚定终局（M1 冒烟种子 20261019）");
             Assert.AreEqual(7, result.Turns, "锚定回合数");
         }
@@ -371,7 +382,7 @@ namespace Battle.Tests
             foreach (int seed in new[] { 0, 42, 123, 20261019 })
             {
                 AutoBattleResult fromCode = AutoBattle.Run(M1HardcodedSetup(seed));
-                AutoBattleResult fromData = AutoBattle.Run(DemoBattleData.CreateSetup(catalog, seed));
+                AutoBattleResult fromData = AutoBattle.Run(DataSetup(seed));
                 Assert.AreEqual(fromCode.Result, fromData.Result, $"种子 {seed}：终局一致（数值移植零漂移）");
                 Assert.AreEqual(fromCode.Turns, fromData.Turns, $"种子 {seed}：回合数一致");
             }

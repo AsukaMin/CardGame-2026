@@ -40,12 +40,16 @@ namespace Battle
 
         public BattleWorld(IRandomSource random) => Random = random;
 
-        /// <summary>效果伤害记录（RecordEffectDamageOp 写入，session 每次结算后排空广播）。</summary>
-        public readonly List<(SkillEntity Source, SkillEntity Target, double Amount)> EffectDamageLog =
-            new List<(SkillEntity, SkillEntity, double)>();
+        /// <summary>效果伤害记录（RecordEffectDamageOp 写入，session 每次结算后排空广播）。
+        /// M5·T2.3：补记盾吸收量（事件旁位字段，Amount 仍=实际扣血）。</summary>
+        public readonly List<(SkillEntity Source, SkillEntity Target, double Amount, double ShieldAbsorbed)> EffectDamageLog =
+            new List<(SkillEntity, SkillEntity, double, double)>();
 
         /// <summary>宿主注入的抽牌动作（DrawCardsOp 的执行通路；null=未注入，op 执行即抛配置错误）。</summary>
         public System.Action<int> DrawCards;
+
+        /// <summary>宿主注入的加卡动作（AddCardToHandOp 的执行通路：按卡表 id 取卡入手；null=未注入即抛）。</summary>
+        public System.Action<int, int> AddCardToHand;
 
         public SkillEntity AddLeader(int team, string name, int maxHp) =>
             Add(team, name, EntityKind.Leader, 0, maxHp);

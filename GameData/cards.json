@@ -250,5 +250,290 @@
         "playAfterAnimation": false
       }
     ]
+  },
+  {
+    "kind": "effect",
+    "id": 1008,
+    "name": "荆棘结界",
+    "cost": 1,
+    "triggers": [
+      {
+        "eventTag": "Event.Damage.Applied",
+        "selfOnly": true,
+        "effects": {
+          "target": "Instigator",
+          "ops": [
+            {
+              "op": "Damage",
+              "amount": {
+                "kind": "Const",
+                "value": 2.0,
+                "key": "",
+                "attribute": "Attack",
+                "coefficient": 1.0,
+                "useSnapshot": false
+              },
+              "kind": "Effect"
+            }
+          ],
+          "playAfterAnimation": false
+        }
+      }
+    ]
+  },
+  {
+    "kind": "effect",
+    "id": 1009,
+    "name": "汲血印记",
+    "cost": 1,
+    "triggers": [
+      {
+        "eventTag": "Event.Damage.Applied",
+        "sourceOnly": true,
+        "filter": {
+          "kind": "EventSourceCard",
+          "cardId": 1003
+        },
+        "effects": {
+          "target": "Self",
+          "ops": [
+            {
+              "op": "DrawCards",
+              "count": 1
+            }
+          ],
+          "playAfterAnimation": false
+        }
+      }
+    ]
+  },
+  {
+    "kind": "effect",
+    "id": 1010,
+    "name": "处决",
+    "cost": 2,
+    "effects": [
+      {
+        "target": "Chosen",
+        "ops": [
+          {
+            "op": "Damage",
+            "amount": {
+              "kind": "Const",
+              "value": 6.0,
+              "key": "",
+              "attribute": "Attack",
+              "coefficient": 1.0,
+              "useSnapshot": false
+            },
+            "kind": "Effect"
+          }
+        ],
+        "playAfterAnimation": false
+      },
+      {
+        "target": "Self",
+        "ops": [
+          {
+            "op": "Conditional",
+            "condition": {
+              "kind": "LastDamageKilled"
+            },
+            "conditionTarget": "Current",
+            "then": [
+              {
+                "op": "Heal",
+                "amount": {
+                  "kind": "Const",
+                  "value": 3.0,
+                  "key": "",
+                  "attribute": "Attack",
+                  "coefficient": 1.0,
+                  "useSnapshot": false
+                }
+              }
+            ],
+            "else": []
+          }
+        ],
+        "playAfterAnimation": false
+      }
+    ]
+  },
+  {
+    "kind": "effect",
+    "id": 1011,
+    "name": "学者",
+    "cost": 1,
+    "effects": [
+      {
+        "target": "Self",
+        "ops": [
+          {
+            "op": "AddCardToHand",
+            "cardId": 1011,
+            "count": 1
+          }
+        ],
+        "playAfterAnimation": false
+      }
+    ]
+  },
+  {
+    "kind": "effect",
+    "id": 1012,
+    "name": "烈焰风暴",
+    "cost": 3,
+    "effects": [
+      {
+        "target": "AllOpposingUnits",
+        "ops": [
+          {
+            "op": "Damage",
+            "amount": {
+              "kind": "Const",
+              "value": 2.0,
+              "key": "",
+              "attribute": "Attack",
+              "coefficient": 1.0,
+              "useSnapshot": false
+            },
+            "kind": "Effect"
+          }
+        ],
+        "playAfterAnimation": false
+      }
+    ]
+  },
+  {
+    "kind": "effect",
+    "id": 1013,
+    "name": "治疗术",
+    "cost": 1,
+    "effects": [
+      {
+        "target": "AlliedLeader",
+        "ops": [
+          {
+            "op": "Heal",
+            "amount": {
+              "kind": "Const",
+              "value": 4.0,
+              "key": "",
+              "attribute": "Attack",
+              "coefficient": 1.0,
+              "useSnapshot": false
+            }
+          }
+        ],
+        "playAfterAnimation": false
+      }
+    ]
+  },
+  {
+    "kind": "effect",
+    "id": 1014,
+    "name": "战吼",
+    "cost": 2,
+    "effects": [
+      {
+        "target": "AllAlliedUnits",
+        "ops": [
+          {
+            "op": "ApplyEffect",
+            "effect": {
+              "name": "战吼",
+              "duration": "Rounds",
+              "rounds": 2,
+              "modifiers": [
+                {
+                  "attribute": "Attack",
+                  "mod": "Add",
+                  "magnitude": {
+                    "kind": "Const",
+                    "value": 1.0,
+                    "key": "",
+                    "attribute": "Attack",
+                    "coefficient": 1.0,
+                    "useSnapshot": false
+                  }
+                }
+              ]
+            }
+          }
+        ],
+        "playAfterAnimation": false
+      }
+    ]
+  },
+  {
+    "kind": "effect",
+    "id": 1015,
+    "name": "冰甲",
+    "cost": 1,
+    "triggers": [
+      {
+        "eventTag": "Event.Damage.Preview",
+        "timing": "Preview",
+        "selfOnly": true,
+        "effects": {
+          "target": "Self",
+          "ops": [
+            {
+              "op": "ModifyEventMagnitude",
+              "delta": -2.0,
+              "scale": 1.0
+            }
+          ],
+          "playAfterAnimation": false
+        }
+      }
+    ]
+  },
+  {
+    "kind": "effect",
+    "id": 1016,
+    "name": "嘲讽图腾",
+    "cost": 1,
+    "effects": [
+      {
+        "target": "AllAlliedUnits",
+        "ops": [
+          {
+            "op": "GrantTag",
+            "tag": "Keyword.Taunt",
+            "duration": "Permanent",
+            "rounds": 1
+          }
+        ],
+        "playAfterAnimation": false
+      }
+    ]
+  },
+  {
+    "kind": "effect",
+    "id": 1017,
+    "name": "雷击",
+    "cost": 1,
+    "effects": [
+      {
+        "target": "RandomOpposingUnit",
+        "ops": [
+          {
+            "op": "Damage",
+            "amount": {
+              "kind": "Const",
+              "value": 4.0,
+              "key": "",
+              "attribute": "Attack",
+              "coefficient": 1.0,
+              "useSnapshot": false
+            },
+            "kind": "Effect"
+          }
+        ],
+        "playAfterAnimation": false
+      }
+    ]
   }
 ]

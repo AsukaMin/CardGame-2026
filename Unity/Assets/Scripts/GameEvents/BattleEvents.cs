@@ -77,7 +77,7 @@ namespace GameEvents
         }
     }
 
-    /// <summary>一次攻击结算完毕（战斗伤害；Amount=实际落地值）。</summary>
+    /// <summary>一次攻击结算完毕（战斗伤害；Amount=实际落地值，盾吸收走 ShieldAbsorbed——M5·T2.3 事实字段）。</summary>
     public readonly struct AttackResolved
     {
         public readonly int AttackerId;
@@ -85,17 +85,23 @@ namespace GameEvents
         public readonly int TargetId;
         public readonly string TargetName;
         public readonly int Amount;
-        public AttackResolved(int attackerId, string attackerName, int targetId, string targetName, int amount)
+        public readonly int ShieldAbsorbed;
+        public readonly int TargetShieldAfter;
+        public AttackResolved(int attackerId, string attackerName, int targetId, string targetName,
+            int amount, int shieldAbsorbed, int targetShieldAfter)
         {
             AttackerId = attackerId;
             AttackerName = attackerName;
             TargetId = targetId;
             TargetName = targetName;
             Amount = amount;
+            ShieldAbsorbed = shieldAbsorbed;
+            TargetShieldAfter = targetShieldAfter;
         }
     }
 
-    /// <summary>一次效果伤害落地（法术来源；战斗伤害走 AttackResolved）。</summary>
+    /// <summary>一次效果伤害落地（法术来源；战斗伤害走 AttackResolved）。
+    /// Amount=实际扣血（盾吸收不进事件值——M2 定案），吸收明细走 ShieldAbsorbed（M5·T2.3 按需加的事实字段）。</summary>
     public readonly struct DamageResolved
     {
         public readonly int SourceId;
@@ -104,8 +110,10 @@ namespace GameEvents
         public readonly string TargetName;
         public readonly int Amount;
         public readonly int TargetHpAfter;
+        public readonly int ShieldAbsorbed;
+        public readonly int TargetShieldAfter;
         public DamageResolved(int sourceId, string sourceName, int targetId, string targetName,
-            int amount, int targetHpAfter)
+            int amount, int targetHpAfter, int shieldAbsorbed, int targetShieldAfter)
         {
             SourceId = sourceId;
             SourceName = sourceName;
@@ -113,6 +121,8 @@ namespace GameEvents
             TargetName = targetName;
             Amount = amount;
             TargetHpAfter = targetHpAfter;
+            ShieldAbsorbed = shieldAbsorbed;
+            TargetShieldAfter = targetShieldAfter;
         }
     }
 

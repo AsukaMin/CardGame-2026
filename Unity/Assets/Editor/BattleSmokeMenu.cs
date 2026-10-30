@@ -12,11 +12,15 @@ public static class BattleSmokeMenu
     [MenuItem("Tools/战斗核心/跑一场冒烟对局")]
     public static void RunSmokeBattle()
     {
+        string gameData = Path.GetDirectoryName(CardsJsonPath());
         CardCatalog catalog = CardCatalog.Load(File.ReadAllText(CardsJsonPath()));
+        // M5·T3：组牌/敌方阵容数据化——冒烟对局走牌组 1 + 敌人 3002（与锚定编排一致）
+        DeckCatalog decks = DeckCatalog.Load(File.ReadAllText(Path.Combine(gameData, "decks.json")), catalog);
+        EnemyCatalog enemies = EnemyCatalog.Load(File.ReadAllText(Path.Combine(gameData, "enemies.json")), catalog);
         AutoBattleResult result;
         using (BattleDebugPresenter presenter = BattleDebugPresenter.Attach())
         {
-            result = AutoBattle.Run(DemoBattleData.CreateSetup(catalog, SmokeSeed));
+            result = AutoBattle.Run(DemoBattleData.CreateSetup(catalog, decks.Get(1), enemies.Get(3002), SmokeSeed));
         }
         Debug.Log($"[战斗] 冒烟对局结束：{(result.Result == BattleResult.Victory ? "玩家胜利" : "玩家失败")}，共 {result.Turns} 回合");
     }
