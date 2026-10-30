@@ -28,8 +28,10 @@ public sealed class CardItemView : MonoBehaviour
 
         SetText("name", card.Name);
         SetText("cost", card.Cost.ToString());
-        SetText("attack", card.Monster != null ? card.Monster.Attack.ToString() : "");
-        SetText("hp", card.Monster != null ? card.Monster.MaxHp.ToString() : "");
+        SetText("attack", card.Monster != null ? card.Monster.Attack.ToString()
+            : card.Summon != null ? card.Summon.Attack.ToString() : "");
+        SetText("hp", card.Monster != null ? card.Monster.MaxHp.ToString()
+            : card.Summon != null ? card.Summon.MaxHp.ToString() : "");
 
         Image bg = table != null ? table.GetImage("bg") : null;
         if (bg != null)

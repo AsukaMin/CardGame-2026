@@ -221,7 +221,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 54
+  m_text: '0
+
+'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: df4fde10d713bee429322784350dc3d3, type: 2}
   m_sharedMaterial: {fileID: 3711703475456624574, guid: df4fde10d713bee429322784350dc3d3, type: 2}
@@ -1255,7 +1257,6 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 7354672447920351585}
   - {fileID: 3969448452539160181}
   - {fileID: 2419989569071480631}
   - {fileID: 7898816562231388883}
@@ -1263,6 +1264,7 @@ RectTransform:
   - {fileID: 6995532872025830586}
   - {fileID: 5138155036964659141}
   - {fileID: 114872445776803697}
+  - {fileID: 7354672447920351585}
   - {fileID: 7537274026970009238}
   - {fileID: 2658373599093701952}
   - {fileID: 3788371680563286000}

@@ -41,4 +41,12 @@ public sealed class UnitItemView : MonoBehaviour
         TMP_Text t = table != null ? table.GetText(key) : null;
         if (t != null) t.text = value;
     }
+
+    /// <summary>灰化（本回合已攻击等不可用态——M3 留白①，M5·T2.2）；CanvasGroup 懒挂。</summary>
+    public void SetGray(bool gray)
+    {
+        CanvasGroup cg = GetComponent<CanvasGroup>();
+        if (cg == null) cg = gameObject.AddComponent<CanvasGroup>();
+        cg.alpha = gray ? 0.45f : 1f;
+    }
 }

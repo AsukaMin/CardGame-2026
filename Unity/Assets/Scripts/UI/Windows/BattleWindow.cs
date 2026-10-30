@@ -91,8 +91,21 @@ public sealed class BattleWindow : UIWindow
     void On(CardDrawn e) { AppendLog($"抽牌：{e.CardName}"); RefreshAll(); }
     void On(CardPlayed e) { AppendLog($"打出：{e.CardName}"); RefreshAll(); }
     void On(MonsterSummoned e) { AppendLog($"{(e.IsPlayerSide ? "我方" : "敌方")}召唤 {e.Name} {e.Attack}/{e.MaxHp}"); RefreshAll(); }
-    void On(AttackResolved e) { AppendLog($"{e.AttackerName} 攻击 {e.TargetName}，伤害 {e.Amount}"); RefreshAll(); }
-    void On(DamageResolved e) { AppendLog($"{e.SourceName} 对 {e.TargetName} 效果伤害 {e.Amount}（剩 {e.TargetHpAfter} HP）"); RefreshAll(); }
+    void On(AttackResolved e)
+    {
+        AppendLog(e.ShieldAbsorbed > 0
+            ? $"{e.AttackerName} 攻击 {e.TargetName}，盾吸 {e.ShieldAbsorbed}，落地 {e.Amount}"
+            : $"{e.AttackerName} 攻击 {e.TargetName}，伤害 {e.Amount}");
+        RefreshAll();
+    }
+
+    void On(DamageResolved e)
+    {
+        AppendLog(e.ShieldAbsorbed > 0
+            ? $"{e.SourceName} 对 {e.TargetName} 效果伤害，盾吸 {e.ShieldAbsorbed}，落地 {e.Amount}（剩 {e.TargetHpAfter} HP）"
+            : $"{e.SourceName} 对 {e.TargetName} 效果伤害 {e.Amount}（剩 {e.TargetHpAfter} HP）");
+        RefreshAll();
+    }
     void On(UnitDied e) { AppendLog($"{e.Name} 死亡离场"); RefreshAll(); }
 
     void On(BattleEnded e)
@@ -150,8 +163,8 @@ public sealed class BattleWindow : UIWindow
         if (endTurn != null) endTurn.interactable = s.Phase == BattlePhase.PlayerPlay && !s.IsBattleOver;
 
         RebuildHand(s);
-        RebuildBoard(s.PlayerBoard, "playerBoardRoot", isPlayerSide: true);
-        RebuildBoard(s.EnemyBoard, "enemyBoardRoot", isPlayerSide: false);
+        RebuildBoard(s, s.PlayerBoard, "playerBoardRoot", isPlayerSide: true);
+        RebuildBoard(s, s.EnemyBoard, "enemyBoardRoot", isPlayerSide: false);
     }
 
     // ==================== 手势/按钮 → 命令（UI→逻辑只有方法；失败=InvalidOperationException 中文消息） ====================
@@ -178,11 +191,44 @@ public sealed class BattleWindow : UIWindow
                 RunCommand(() => s.SummonMonster(card.HandIndex));
             // 释放区外 = 取消（静默，策划案§六）
         }
-        else if (TryResolveEnemyTarget(eventData, card.transform, out SkillEntity target))
+        else
         {
-            // 效果卡 → 敌方单位 / 敌方领袖
-            RunCommand(() => s.PlayEffectCard(card.HandIndex, target.Id));
+            // 效果卡：先判己方场上区（治疗/增益对己方释放——M5 验收反馈），再判敌方目标
+            RectTransform board = GetGameObject("playerBoardRoot")?.transform as RectTransform;
+            bool overPlayerBoard = board != null &&
+                RectTransformUtility.RectangleContainsScreenPoint(board, eventData.position, eventData.pressEventCamera);
+            if (overPlayerBoard && !card.Card.RequiresEnemyTarget)
+            {
+                // 落在自己场上：命中具体怪=给它，没落在怪上=给自己（领袖）
+                SkillEntity ally = FindAlliedUnitUnderPointer(eventData, card.transform);
+                SkillEntity anchor = ally ?? s.PlayerLeader;
+                RunCommand(() => s.PlayEffectCard(card.HandIndex, anchor.Id));
+            }
+            else if (TryResolveEnemyTarget(eventData, card.transform, out SkillEntity target))
+            {
+                // 效果卡 → 敌方单位 / 敌方领袖
+                RunCommand(() => s.PlayEffectCard(card.HandIndex, target.Id));
+            }
+            // 依赖敌方目标的直伤卡拖己方区 / 释放区外 = 取消（静默）
         }
+    }
+
+    /// <summary>释放点命中的己方场上单位（效果卡对己方释放用；无命中返回 null）。</summary>
+    SkillEntity FindAlliedUnitUnderPointer(PointerEventData eventData, Transform dragSource)
+    {
+        if (EventSystem.current == null) return null;
+        raycastBuffer.Clear();
+        EventSystem.current.RaycastAll(eventData, raycastBuffer);
+        foreach (RaycastResult hit in raycastBuffer)
+        {
+            if (hit.gameObject == null) continue;
+            Transform t = hit.gameObject.transform;
+            if (dragSource != null && t.IsChildOf(dragSource)) continue; // 拖源自身挡在指针下，跳过
+            UnitItemView unitView = t.GetComponentInParent<UnitItemView>();
+            if (unitView != null && unitView.IsPlayerSide && unitView.Entity != null)
+                return unitView.Entity;
+        }
+        return null;
     }
 
     void OnUnitDragEnded(UnitItemView unit, PointerEventData eventData)
@@ -258,7 +304,7 @@ public sealed class BattleWindow : UIWindow
         }
     }
 
-    void RebuildBoard(IReadOnlyList<SkillEntity> board, string rootKey, bool isPlayerSide)
+    void RebuildBoard(BattleSession s, IReadOnlyList<SkillEntity> board, string rootKey, bool isPlayerSide)
     {
         Transform root = GetGameObject(rootKey)?.transform;
         if (root == null) return;
@@ -271,6 +317,7 @@ public sealed class BattleWindow : UIWindow
             UnitItemView item = go.GetComponent<UnitItemView>() ?? go.AddComponent<UnitItemView>(); // get-or-add：模板惯例不挂脚本，但挂了也兼容
             // 我方单位挂攻击拖拽手势；敌方单位不挂（仅作释放判定热区）
             item.Setup(board[i], isPlayerSide, isPlayerSide ? OnUnitDragEnded : null);
+            if (isPlayerSide) item.SetGray(s.HasAttackedThisTurn(board[i].Id)); // 本回合已攻击灰化（M3 留白①）
             PlaceItem(item.transform, i, board.Count, BoardSpacing);
         }
     }
@@ -284,13 +331,16 @@ public sealed class BattleWindow : UIWindow
         if (logLines.Count > LogMaxLines) logLines.RemoveAt(0); // 只留尾部，防无限增长
     }
 
-    /// <summary>命令失败提示：tipLayer API 未建（框架留白），用 DotweenHelper.FloatText 纯代码飘字顶替 + 日志留底。</summary>
+    /// <summary>命令失败提示（M5·T2.1 升级）：TipWindow（tipLayer 过路即走）+ 日志留底。</summary>
     void ShowTip(string message)
     {
         AppendLog(message);
         TMP_Text logText = GetText("logText");
         if (logText != null) logText.text = string.Join("\n", logLines);
-        DotweenHelper.FloatText(transform, new Vector2(0f, -150f), message, Color.red);
+        var param = new UIParam();
+        param.Set("Message", message);
+        param.Set("Color", Color.red);
+        UIManager.Instance.Show("TipWindow", param);
     }
 
     void SetActive(string key, bool active)
