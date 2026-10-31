@@ -29,7 +29,8 @@ public sealed class SkillEditorWindow : EditorWindow
 
     PartCardAuthoringAsset current;
     string currentPath;
-    string lastUndoTargetPath; // 最近撤销目标卡（与 MarkCurrentDirty 同步更新——撤销注册点全部伴随脏标）
+    PartCardUndoToken undoToken; // 撤销载体（string 快照走原生 Undo 栈——[SerializeReference] 不进 Unity 快照，见 PartCardUndo）
+    string lastAppliedBlob;      // 与 token.Blob 同步的基线；不相等=刚发生了一次本编辑器的撤销/重做
 
     [MenuItem("Tools/技能编辑器/打开技能编辑器")]
     public static void Open()
@@ -69,6 +70,7 @@ public sealed class SkillEditorWindow : EditorWindow
     void OnEnable()
     {
         instance = this;
+        undoToken = CreateInstance<PartCardUndoToken>();
         treeView = new PartCardTreeView(new TreeViewState());
         treeView.OnCardSelected += path =>
         {
@@ -80,6 +82,7 @@ public sealed class SkillEditorWindow : EditorWindow
             current = null;
             currentPath = null;
             graph.Load(null);
+            RefreshUndoToken(); // 撤销基线清空（卡已不在）
             propertyView?.MarkDirtyRepaint();
         };
 
@@ -90,7 +93,7 @@ public sealed class SkillEditorWindow : EditorWindow
             selection = element;
             propertyView.MarkDirtyRepaint();
         };
-        graph.OnGraphDirty = () => MarkCurrentDirty();
+        graph.OnGraphDirty = opName => CommitUndo(opName);
         poolView = new IMGUIContainer(DrawCardPool) { style = { width = 280, minWidth = 240 } };
         propertyView = new IMGUIContainer(DrawPropertyPanel) { style = { width = 340, minWidth = 300 } };
 
@@ -161,7 +164,6 @@ public sealed class SkillEditorWindow : EditorWindow
 
     void DrawRootProperties()
     {
-        Undo.RecordObject(current, "编辑卡字段"); // 帧末比对去重：无改动不入撤销栈（Inspector 标准模式）
         EditorGUI.BeginChangeCheck();
         current.CardId = EditorGUILayout.IntField("卡牌 Id", current.CardId);
         current.SlotType = Popup("槽型", current.SlotType, PartCardLabels.SlotValues, PartCardLabels.SlotNames);
@@ -176,7 +178,7 @@ public sealed class SkillEditorWindow : EditorWindow
         }
         if (EditorGUI.EndChangeCheck())
         {
-            MarkCurrentDirty();
+            CommitUndo("编辑卡字段");
             graph.RefreshAllSummaries(); // 槽型改动端口即时重建（§5.2）
             poolView.MarkDirtyRepaint(); // Id 改动左栏即时刷新（§5.2）
         }
@@ -184,7 +186,6 @@ public sealed class SkillEditorWindow : EditorWindow
 
     void DrawNodeProperties(PartGraphNode data)
     {
-        Undo.RecordObject(current, "编辑节点参数"); // POCO 不是 Object，快照记宿主 SO（[SerializeReference] 随整卡覆盖）
         if (data is OpNodeData op)
         {
             op.Kind = Popup("操作", op.Kind, PartCardLabels.OpValues, PartCardLabels.OpNames);
@@ -237,7 +238,7 @@ public sealed class SkillEditorWindow : EditorWindow
             if (GUILayout.Button("删除此节点")) graph.DeleteSelectedNodes();
             EditorGUILayout.HelpBox("触发链内单组单目标（TriggerDef 只装一个效果组）——链上不许切目标。", MessageType.None);
         }
-        if (GUI.changed) { MarkCurrentDirty(); graph.RefreshAllSummaries(); }
+        if (GUI.changed) { CommitUndo("编辑节点参数"); graph.RefreshAllSummaries(); }
     }
 
     // ==================== 卡打开/保存/脏标 ====================
@@ -249,36 +250,66 @@ public sealed class SkillEditorWindow : EditorWindow
         current = AssetDatabase.LoadAssetAtPath<PartCardAuthoringAsset>(path);
         graph.Load(current);
         graph.SelectRoot(); // 打开后自动选中技能节点（§5.1）
+        RefreshUndoToken(); // 撤销基线=新卡现态
         propertyView.MarkDirtyRepaint();
     }
 
     void MarkCurrentDirty()
     {
-        if (current == null) return;
-        EditorUtility.SetDirty(current);
-        lastUndoTargetPath = currentPath; // 撤销目标卡追踪（跨卡撤销自动切回，见 OnUndoRedo）
+        if (current != null) EditorUtility.SetDirty(current);
     }
 
-    /// <summary>撤销/重做落地（Unity 只恢复 SO 序列化状态，视图须重建）。
-    /// 作用于另一张卡时自动切回该卡+气泡提示（定案 2026-10-31）——lastUndoTargetPath 是全局栈顶最可能的目标，
-    /// 外部窗口的撤销至多误切一次（有气泡说明，无害）。</summary>
-    void OnUndoRedo()
+    // ==================== 撤销（token 字符串快照——见 PartCardUndo 头注） ====================
+
+    /// <summary>提交一次可撤销操作：注册时 token.Blob 仍是上一提交点（=本次前态），注册后刷新为现态。
+    /// 时序宽松——不必赶在内存改动前（快照的是字符串字段，不是资产）。</summary>
+    void CommitUndo(string opName)
     {
-        if (graph == null) return;
-        if (!string.IsNullOrEmpty(lastUndoTargetPath) && lastUndoTargetPath != currentPath
-            && AssetDatabase.LoadAssetAtPath<PartCardAuthoringAsset>(lastUndoTargetPath) != null)
+        if (current == null) return;
+        Undo.RegisterCompleteObjectUndo(undoToken, opName);
+        RefreshUndoToken();
+        MarkCurrentDirty();
+    }
+
+    /// <summary>撤销基线刷新为当前卡现态（开卡/切卡/删卡后调用）。</summary>
+    void RefreshUndoToken()
+    {
+        if (current == null)
         {
-            string cardName = Path.GetFileNameWithoutExtension(lastUndoTargetPath);
-            OpenCard(lastUndoTargetPath); // 内部先保存当前卡
-            EditorUtility.SetDirty(current);
-            ShowNotification(new GUIContent($"已撤销/重做：切回「{cardName}」"));
+            undoToken.CardPath = null;
+            undoToken.Blob = null;
+            lastAppliedBlob = null;
             return;
         }
-        if (current == null) return;
+        undoToken.CardPath = currentPath;
+        undoToken.Blob = PartCardUndo.Capture(current);
+        lastAppliedBlob = undoToken.Blob;
+    }
+
+    /// <summary>撤销/重做落地：Unity 恢复的是 token 上的字符串快照，此处写回资产并重建画布。
+    /// Blob 与基线相同=外部对象的撤销，忽略。跨卡（目标≠当前卡）自动切回+气泡（定案 2026-10-31）。</summary>
+    void OnUndoRedo()
+    {
+        if (graph == null || undoToken == null) return;
+        string blob = undoToken.Blob;
+        if (string.IsNullOrEmpty(blob) || blob == lastAppliedBlob) return;
+
+        if (undoToken.CardPath != currentPath)
+        {
+            PartCardAuthoringAsset target = AssetDatabase.LoadAssetAtPath<PartCardAuthoringAsset>(undoToken.CardPath);
+            if (target == null) return; // 目标卡资产已删——放弃恢复
+            SaveCurrentCard();
+            currentPath = undoToken.CardPath;
+            current = target;
+            poolView.MarkDirtyRepaint();
+            ShowNotification(new GUIContent($"已撤销/重做：切回「{Path.GetFileNameWithoutExtension(currentPath)}」"));
+        }
+
+        PartCardUndo.Apply(blob, current);
+        lastAppliedBlob = blob; // 与 token 同步（刚 Apply 过，免一次重序列化）
         graph.ReloadFromAsset();
-        EditorUtility.SetDirty(current); // 撤销结果保证落盘
+        MarkCurrentDirty(); // 撤销结果保证落盘
         propertyView.MarkDirtyRepaint();
-        poolView.MarkDirtyRepaint(); // CardId 可能被撤销回来
     }
 
     void SaveCurrentCard()

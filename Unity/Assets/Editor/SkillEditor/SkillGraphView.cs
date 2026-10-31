@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -16,7 +15,7 @@ public sealed class SkillGraphView : GraphView
 {
     public PartCardAuthoringAsset Asset { get; private set; }
     public Action<GraphElement> OnSelectionChanged;
-    public Action OnGraphDirty;
+    public Action<string> OnGraphDirty; // 参数=操作名（撤销提交用——快照在窗口侧统一落）
 
     RootNodeView root;
     readonly Dictionary<string, PartNodeView> nodeViews = new Dictionary<string, PartNodeView>();
@@ -119,20 +118,17 @@ public sealed class SkillGraphView : GraphView
 
     void AddNodeAt(Vector2 position, PartGraphNode data)
     {
-        Undo.RegisterCompleteObjectUndo(Asset, "创建节点"); // 整卡快照（撤销/重做走 Unity 全局栈）
         data.Position = position;
         Asset.Nodes.Add(data);
         PartNodeView view = CreateView(data);
         nodeViews[data.Guid] = view;
         AddElement(view);
-        OnGraphDirty?.Invoke();
+        OnGraphDirty?.Invoke("创建节点");
     }
 
     /// <summary>删除选中节点（连边一并清；技能主节点不可删）。</summary>
     public void DeleteSelectedNodes()
     {
-        if (selection.OfType<GraphElement>().Any(e => e is PartNodeView v && v.Data != null))
-            Undo.RegisterCompleteObjectUndo(Asset, "删除节点");
         foreach (GraphElement element in selection.OfType<GraphElement>().ToList())
         {
             if (!(element is PartNodeView view) || view.Data == null) continue;
@@ -141,7 +137,7 @@ public sealed class SkillGraphView : GraphView
             nodeViews.Remove(view.Data.Guid);
             RemoveElement(view);
         }
-        OnGraphDirty?.Invoke();
+        OnGraphDirty?.Invoke("删除节点");
     }
 
     public void RefreshAllSummaries()
@@ -209,20 +205,16 @@ public sealed class SkillGraphView : GraphView
                     Debug.LogWarning($"[技能编辑器] 连线被拒：{error}");
                 }
             }
-            if (pending.Count > 0) // 先校验后注册，被拒的连线不产生空撤销步
+            if (pending.Count > 0) // 先校验后提交，被拒的连线不产生空撤销步
             {
-                Undo.RegisterCompleteObjectUndo(Asset, "连线");
                 Asset.Edges.AddRange(pending);
-                OnGraphDirty?.Invoke();
+                OnGraphDirty?.Invoke("连线");
             }
             change.edgesToCreate = allowed;
         }
 
         if (change.elementsToRemove != null) // 删边（Delete 键/右键）与删节点一并在此（Unity 6 无 edgesToRemove 字段）
         {
-            if (change.elementsToRemove.Any(e => (e is Edge edge && edge.input?.node is PartNodeView)
-                                              || (e is PartNodeView v && v.Data != null)))
-                Undo.RegisterCompleteObjectUndo(Asset, "删除节点/边");
             foreach (GraphElement element in change.elementsToRemove)
             {
                 switch (element)
@@ -241,17 +233,15 @@ public sealed class SkillGraphView : GraphView
                     }
                 }
             }
-            if (change.elementsToRemove.Count > 0) OnGraphDirty?.Invoke();
+            if (change.elementsToRemove.Count > 0) OnGraphDirty?.Invoke("删除节点/边");
         }
 
         if (change.movedElements != null)
         {
-            if (change.movedElements.OfType<PartNodeView>().Any(v => v.Data != null))
-                Undo.RegisterCompleteObjectUndo(Asset, "移动节点");
             foreach (GraphElement element in change.movedElements)
                 if (element is PartNodeView view && view.Data != null)
                     view.Data.Position = element.GetPosition().position;
-            if (change.movedElements.Count > 0) OnGraphDirty?.Invoke();
+            if (change.movedElements.Count > 0) OnGraphDirty?.Invoke("移动节点");
         }
         return change;
     }
