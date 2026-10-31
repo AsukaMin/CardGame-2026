@@ -335,6 +335,7 @@ public sealed class PartNodeView : Node
 
     readonly VisualElement paramList;  // 展开态：主要参数清单（端口行正下方）
     readonly Label summaryStrip;       // 收起态：黑底一行简述
+    bool collapsed;                    // 自管收起态——不动 expanded（6000.3 无 Port.alwaysVisible，内置收起会藏未连接端口）
 
     public PartNodeView(PartGraphNode data)
     {
@@ -361,9 +362,6 @@ public sealed class PartNodeView : Node
                 outputContainer.Add(Output);
                 break;
         }
-        foreach (Port port in new[] { Input, Output, OutputYes, OutputNo })
-            if (port != null) port.alwaysVisible = true; // 收起时端口不消失（Unity 6 默认收起会隐藏未连接端口）
-
         // 先插简述条再插参数区 → 最终顺序：端口行 → paramList → summaryStrip
         summaryStrip = PartNodeStyles.NewSummaryStrip();
         paramList = PartNodeStyles.NewParamList();
@@ -374,17 +372,20 @@ public sealed class PartNodeView : Node
         RefreshExpandedState();
     }
 
-    /// <summary>收起行为改造（2026-10-31 定案）：端口 alwaysVisible 不收，只收参数区、换成黑底简述条。</summary>
+    /// <summary>收起行为改造（2026-10-31 定案）：拦截内置折叠按钮、不调 base（expanded 恒 true，
+    /// 内置"收起藏端口"不触发），只切换参数区/黑底简述条；折叠箭头指向靠 USS 类翻转。</summary>
     protected override void ToggleCollapse()
     {
-        base.ToggleCollapse();
+        collapsed = !collapsed;
+        EnableInClassList("collapsed", collapsed);
+        EnableInClassList("expanded", !collapsed);
         ApplyCollapseState();
     }
 
     void ApplyCollapseState()
     {
-        paramList.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
-        summaryStrip.style.display = expanded ? DisplayStyle.None : DisplayStyle.Flex;
+        paramList.style.display = collapsed ? DisplayStyle.None : DisplayStyle.Flex;
+        summaryStrip.style.display = collapsed ? DisplayStyle.Flex : DisplayStyle.None;
     }
 
     public static string TitleOf(PartGraphNode data) => data switch
@@ -484,6 +485,7 @@ public sealed class RootNodeView : Node
     public readonly Dictionary<string, Port> Ports = new Dictionary<string, Port>();
     readonly VisualElement paramList;
     readonly Label summaryStrip;
+    bool collapsed;
 
     public RootNodeView(PartCardAuthoringAsset asset)
     {
@@ -497,17 +499,19 @@ public sealed class RootNodeView : Node
         ApplyCollapseState();
     }
 
-    /// <summary>收起行为同普通节点：端口不收，只收参数区、换黑底简述条。</summary>
+    /// <summary>收起行为同普通节点：拦截内置折叠（expanded 恒 true，端口与主体不被内置逻辑隐藏）。</summary>
     protected override void ToggleCollapse()
     {
-        base.ToggleCollapse();
+        collapsed = !collapsed;
+        EnableInClassList("collapsed", collapsed);
+        EnableInClassList("expanded", !collapsed);
         ApplyCollapseState();
     }
 
     void ApplyCollapseState()
     {
-        paramList.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
-        summaryStrip.style.display = expanded ? DisplayStyle.None : DisplayStyle.Flex;
+        paramList.style.display = collapsed ? DisplayStyle.None : DisplayStyle.Flex;
+        summaryStrip.style.display = collapsed ? DisplayStyle.Flex : DisplayStyle.None;
     }
 
     public void RefreshPorts(PartCardAuthoringAsset asset)
@@ -523,7 +527,6 @@ public sealed class RootNodeView : Node
             Port port = Port.Create<Edge>(Orientation.Horizontal, Direction.Output, Port.Capacity.Multi, typeof(bool));
             port.portName = DisplayName(key);
             port.viewDataKey = key; // 连线数据里的 From 键
-            port.alwaysVisible = true; // 收起时端口不消失
             outputContainer.Add(port);
             Ports[key] = port;
         }
