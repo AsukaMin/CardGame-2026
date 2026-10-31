@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using UnityEngine;
 
 /// <summary>
@@ -19,19 +18,41 @@ public sealed class PartCardUndoToken : ScriptableObject
 
 public static class PartCardUndo
 {
-    /// <summary>只序列化字段：UnityEngine.Vector2 的 normalized 等只读属性会构成自引用环（实测报
-    /// Self referencing loop），而快照契约本就是纯字段 POCO——属性一律不进快照。</summary>
-    sealed class FieldsOnlyResolver : DefaultContractResolver
+    /// <summary>Vector2 专用转换器：只写 x/y。UnityEngine.Vector2 的 normalized 等只读属性构成自引用环，
+    /// 且 13.0.x 上"CreateProperties 强制 MemberSerialization.Fields"不控制成员枚举（实测无效）——转换器绕开成员枚举。</summary>
+    sealed class Vector2JsonConverter : JsonConverter
     {
-        protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
-            => base.CreateProperties(type, MemberSerialization.Fields);
+        public override bool CanConvert(Type t) => t == typeof(Vector2);
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            Vector2 v = (Vector2)value;
+            writer.WriteStartObject();
+            writer.WritePropertyName("x"); writer.WriteValue(v.x);
+            writer.WritePropertyName("y"); writer.WriteValue(v.y);
+            writer.WriteEndObject();
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            Vector2 v = Vector2.zero;
+            if (reader.TokenType != JsonToken.StartObject) return v;
+            while (reader.Read() && reader.TokenType == JsonToken.PropertyName)
+            {
+                string name = (string)reader.Value;
+                reader.Read();
+                if (name == "x") v.x = Convert.ToSingle(reader.Value);
+                else if (name == "y") v.y = Convert.ToSingle(reader.Value);
+            }
+            return v;
+        }
     }
 
     static readonly JsonSerializerSettings settings = new JsonSerializerSettings
     {
         TypeNameHandling = TypeNameHandling.Auto, // List<PartGraphNode> 派生项带 $type
         Formatting = Formatting.None,
-        ContractResolver = new FieldsOnlyResolver(),
+        Converters = { new Vector2JsonConverter() },
     };
 
     [Serializable]
