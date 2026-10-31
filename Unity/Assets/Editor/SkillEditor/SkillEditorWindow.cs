@@ -29,6 +29,7 @@ public sealed class SkillEditorWindow : EditorWindow
 
     PartCardAuthoringAsset current;
     string currentPath;
+    string lastUndoTargetPath; // 最近撤销目标卡（与 MarkCurrentDirty 同步更新——撤销注册点全部伴随脏标）
 
     [MenuItem("Tools/技能编辑器/打开技能编辑器")]
     public static void Open()
@@ -102,12 +103,14 @@ public sealed class SkillEditorWindow : EditorWindow
 
         EditorApplication.update += PollTick;
         EditorApplication.projectChanged += OnProjectChanged;
+        Undo.undoRedoPerformed += OnUndoRedo;
     }
 
     void OnDisable()
     {
         EditorApplication.update -= PollTick;
         EditorApplication.projectChanged -= OnProjectChanged;
+        Undo.undoRedoPerformed -= OnUndoRedo;
         SaveCurrentCard(); // 关窗自动保存（需求文档§7）
     }
 
@@ -158,6 +161,7 @@ public sealed class SkillEditorWindow : EditorWindow
 
     void DrawRootProperties()
     {
+        Undo.RecordObject(current, "编辑卡字段"); // 帧末比对去重：无改动不入撤销栈（Inspector 标准模式）
         EditorGUI.BeginChangeCheck();
         current.CardId = EditorGUILayout.IntField("卡牌 Id", current.CardId);
         current.SlotType = Popup("槽型", current.SlotType, PartCardLabels.SlotValues, PartCardLabels.SlotNames);
@@ -180,6 +184,7 @@ public sealed class SkillEditorWindow : EditorWindow
 
     void DrawNodeProperties(PartGraphNode data)
     {
+        Undo.RecordObject(current, "编辑节点参数"); // POCO 不是 Object，快照记宿主 SO（[SerializeReference] 随整卡覆盖）
         if (data is OpNodeData op)
         {
             op.Kind = Popup("操作", op.Kind, PartCardLabels.OpValues, PartCardLabels.OpNames);
@@ -249,7 +254,31 @@ public sealed class SkillEditorWindow : EditorWindow
 
     void MarkCurrentDirty()
     {
-        if (current != null) EditorUtility.SetDirty(current);
+        if (current == null) return;
+        EditorUtility.SetDirty(current);
+        lastUndoTargetPath = currentPath; // 撤销目标卡追踪（跨卡撤销自动切回，见 OnUndoRedo）
+    }
+
+    /// <summary>撤销/重做落地（Unity 只恢复 SO 序列化状态，视图须重建）。
+    /// 作用于另一张卡时自动切回该卡+气泡提示（定案 2026-10-31）——lastUndoTargetPath 是全局栈顶最可能的目标，
+    /// 外部窗口的撤销至多误切一次（有气泡说明，无害）。</summary>
+    void OnUndoRedo()
+    {
+        if (graph == null) return;
+        if (!string.IsNullOrEmpty(lastUndoTargetPath) && lastUndoTargetPath != currentPath
+            && AssetDatabase.LoadAssetAtPath<PartCardAuthoringAsset>(lastUndoTargetPath) != null)
+        {
+            string cardName = Path.GetFileNameWithoutExtension(lastUndoTargetPath);
+            OpenCard(lastUndoTargetPath); // 内部先保存当前卡
+            EditorUtility.SetDirty(current);
+            ShowNotification(new GUIContent($"已撤销/重做：切回「{cardName}」"));
+            return;
+        }
+        if (current == null) return;
+        graph.ReloadFromAsset();
+        EditorUtility.SetDirty(current); // 撤销结果保证落盘
+        propertyView.MarkDirtyRepaint();
+        poolView.MarkDirtyRepaint(); // CardId 可能被撤销回来
     }
 
     void SaveCurrentCard()

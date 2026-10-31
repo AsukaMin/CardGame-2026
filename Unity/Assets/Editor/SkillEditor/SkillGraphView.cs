@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -118,6 +119,7 @@ public sealed class SkillGraphView : GraphView
 
     void AddNodeAt(Vector2 position, PartGraphNode data)
     {
+        Undo.RegisterCompleteObjectUndo(Asset, "创建节点"); // 整卡快照（撤销/重做走 Unity 全局栈）
         data.Position = position;
         Asset.Nodes.Add(data);
         PartNodeView view = CreateView(data);
@@ -129,6 +131,8 @@ public sealed class SkillGraphView : GraphView
     /// <summary>删除选中节点（连边一并清；技能主节点不可删）。</summary>
     public void DeleteSelectedNodes()
     {
+        if (selection.OfType<GraphElement>().Any(e => e is PartNodeView v && v.Data != null))
+            Undo.RegisterCompleteObjectUndo(Asset, "删除节点");
         foreach (GraphElement element in selection.OfType<GraphElement>().ToList())
         {
             if (!(element is PartNodeView view) || view.Data == null) continue;
@@ -154,6 +158,26 @@ public sealed class SkillGraphView : GraphView
         OnSelectionChanged?.Invoke(root);
     }
 
+    /// <summary>撤销/重做后从资产重建画布：Unity 恢复的是序列化状态，[SerializeReference] 会换 POCO 实例，
+    /// 旧视图的 Data 引用已失效必须全量重建；视口保持不动，选中按 Guid 尽量恢复。</summary>
+    public void ReloadFromAsset()
+    {
+        if (Asset == null) return;
+        string selectedGuid = (selection.OfType<PartNodeView>().FirstOrDefault()?.Data)?.Guid;
+        Vector3 pan = contentViewContainer.transform.position, zoom = contentViewContainer.transform.scale;
+        Load(Asset); // 内含 FrameAll，重建后还原视口撤销不跳视图（Unity 6 viewTransform 只读，直接写 content 容器）
+        contentViewContainer.transform.position = pan;
+        contentViewContainer.transform.scale = zoom;
+        if (selectedGuid != null && nodeViews.TryGetValue(selectedGuid, out PartNodeView restored))
+        {
+            ClearSelection();
+            AddToSelection(restored);
+            lastSelection = restored;
+            OnSelectionChanged?.Invoke(restored);
+        }
+        else SelectRoot();
+    }
+
     // ==================== 连线规则（创建时强制） ====================
 
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
@@ -172,25 +196,33 @@ public sealed class SkillGraphView : GraphView
         if (change.edgesToCreate != null)
         {
             List<Edge> allowed = new List<Edge>();
+            List<PartGraphEdgeData> pending = new List<PartGraphEdgeData>();
             foreach (Edge edge in change.edgesToCreate)
             {
-                string error;
-                if (ValidateEdge(edge, out string fromKey, out error))
+                if (ValidateEdge(edge, out string fromKey, out string error))
                 {
                     allowed.Add(edge);
-                    Asset.Edges.Add(new PartGraphEdgeData { From = fromKey, To = ((PartNodeView)edge.input.node).Data.Guid });
+                    pending.Add(new PartGraphEdgeData { From = fromKey, To = ((PartNodeView)edge.input.node).Data.Guid });
                 }
                 else
                 {
                     Debug.LogWarning($"[技能编辑器] 连线被拒：{error}");
                 }
             }
+            if (pending.Count > 0) // 先校验后注册，被拒的连线不产生空撤销步
+            {
+                Undo.RegisterCompleteObjectUndo(Asset, "连线");
+                Asset.Edges.AddRange(pending);
+                OnGraphDirty?.Invoke();
+            }
             change.edgesToCreate = allowed;
-            if (allowed.Count > 0) OnGraphDirty?.Invoke();
         }
 
         if (change.elementsToRemove != null) // 删边（Delete 键/右键）与删节点一并在此（Unity 6 无 edgesToRemove 字段）
         {
+            if (change.elementsToRemove.Any(e => (e is Edge edge && edge.input?.node is PartNodeView)
+                                              || (e is PartNodeView v && v.Data != null)))
+                Undo.RegisterCompleteObjectUndo(Asset, "删除节点/边");
             foreach (GraphElement element in change.elementsToRemove)
             {
                 switch (element)
@@ -214,6 +246,8 @@ public sealed class SkillGraphView : GraphView
 
         if (change.movedElements != null)
         {
+            if (change.movedElements.OfType<PartNodeView>().Any(v => v.Data != null))
+                Undo.RegisterCompleteObjectUndo(Asset, "移动节点");
             foreach (GraphElement element in change.movedElements)
                 if (element is PartNodeView view && view.Data != null)
                     view.Data.Position = element.GetPosition().position;
