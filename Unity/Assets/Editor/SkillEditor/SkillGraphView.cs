@@ -645,28 +645,32 @@ static class PartNodeStyles
     {
         DoubleField field = new DoubleField(label) { value = value, isDelayed = true };
         field.RegisterValueChangedCallback(e => { set(e.newValue); commit(); });
-        return WithParamStyle(field);
+        StyleParam(field, field.labelElement);
+        return field;
     }
 
     public static IntegerField Int(string label, int value, Action<int> set, Action commit)
     {
         IntegerField field = new IntegerField(label) { value = value, isDelayed = true };
         field.RegisterValueChangedCallback(e => { set(e.newValue); commit(); });
-        return WithParamStyle(field);
+        StyleParam(field, field.labelElement);
+        return field;
     }
 
     public static TextField Text(string label, string value, Action<string> set, Action commit)
     {
         TextField field = new TextField(label) { value = value ?? "", isDelayed = true };
         field.RegisterValueChangedCallback(e => { set(e.newValue); commit(); });
-        return WithParamStyle(field);
+        StyleParam(field, field.labelElement);
+        return field;
     }
 
     public static Toggle Flag(string label, bool value, Action<bool> set, Action commit)
     {
         Toggle field = new Toggle(label) { value = value };
         field.RegisterValueChangedCallback(e => { set(e.newValue); commit(); });
-        return WithParamStyle(field);
+        StyleParam(field, field.labelElement);
+        return field;
     }
 
     /// <summary>中文下拉：显示 names、存 values（与右栏 Popup 同一套 PartCardLabels 值↔名映射）。</summary>
@@ -683,15 +687,17 @@ static class PartNodeStyles
                 commit();
             }
         });
-        return WithParamStyle(field);
+        StyleParam(field, field.labelElement);
+        return field;
     }
 
-    static T WithParamStyle<T>(T field) where T : BaseField
+    /// <summary>统一参数控件样式。不走泛型约束——6000.3 无非泛型 BaseField（只有 BaseField&lt;T&gt;，裸约束报 CS0305），
+    /// 各工厂的具体类型已确定，直接传 labelElement。</summary>
+    static void StyleParam(VisualElement field, VisualElement label)
     {
         field.style.marginTop = 2;
         field.style.fontSize = 12;
-        field.labelElement.style.minWidth = 56;
-        field.labelElement.style.fontSize = 12;
-        return field;
+        label.style.minWidth = 56;
+        label.style.fontSize = 12;
     }
 }
