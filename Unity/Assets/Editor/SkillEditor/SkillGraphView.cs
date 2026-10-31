@@ -52,7 +52,7 @@ public sealed class SkillGraphView : GraphView
         ClearGraph();
         if (asset == null) return;
 
-        root = new RootNodeView(asset);
+        root = new RootNodeView(asset, opName => OnGraphDirty?.Invoke(opName));
         AddElement(root);
 
         foreach (PartGraphNode data in asset.Nodes)
@@ -75,7 +75,7 @@ public sealed class SkillGraphView : GraphView
 
     PartNodeView CreateView(PartGraphNode data)
     {
-        PartNodeView view = new PartNodeView(data);
+        PartNodeView view = new PartNodeView(data, opName => OnGraphDirty?.Invoke(opName));
         view.SetPosition(new Rect(data.Position, PartNodeView.DefaultSize));
         view.style.height = StyleKeyword.Auto; // 参数行数不定，高度随内容（宽度仍 DefaultSize.x）
         view.RefreshSummary();
@@ -333,13 +333,15 @@ public sealed class PartNodeView : Node
     public readonly Port OutputYes; // 条件分支专用（可空）
     public readonly Port OutputNo;
 
-    readonly VisualElement paramList;  // 展开态：主要参数清单（端口行正下方）
-    readonly Label summaryStrip;       // 收起态：黑底一行简述
+    readonly VisualElement paramList;  // 展开态：可编辑参数区（端口行正下方、同底板无额外背景）
+    readonly Label summaryStrip;       // 收起态：一行只读简述（纯文本）
+    readonly Action<string> edited;    // 行内编辑提交回路（→ 窗口撤销提交/脏标/右栏同步）
     bool collapsed;                    // 自管收起态——不动 expanded（6000.3 无 Port.alwaysVisible，内置收起会藏未连接端口）
 
-    public PartNodeView(PartGraphNode data)
+    public PartNodeView(PartGraphNode data, Action<string> onEdited)
     {
         Data = data;
+        edited = onEdited;
         Input = Port.Create<Edge>(Orientation.Horizontal, Direction.Input, Port.Capacity.Single, typeof(bool));
         Output = Port.Create<Edge>(Orientation.Horizontal, Direction.Output, Port.Capacity.Multi, typeof(bool));
         Input.portName = "in";
@@ -407,74 +409,116 @@ public sealed class PartNodeView : Node
         _ => kind.ToString(),
     };
 
-    /// <summary>刷新节点显示：展开态=主要参数清单（每字段一行），收起态=单行简述。
-    /// 只读——完整编辑在右栏（行内编辑 M6）；中文显示经 PartCardLabels，数据侧仍存英文枚举名。</summary>
+    /// <summary>全量刷新（加载/右栏改参/撤销重建时调）：重建参数区 + 简述。
+    /// 行内编辑不走这里（避免重建吃掉正在输入的焦点），走 Edited/EditedRebuild。</summary>
     public void RefreshSummary()
     {
+        RebuildParams();
+        RefreshBrief();
+    }
+
+    /// <summary>行内改值：只更新数据与简述，不重建参数区（正在输入的控件不被打断）；每个字段改动=一步撤销。</summary>
+    void Edited()
+    {
+        RefreshBrief();
+        edited?.Invoke("编辑节点参数");
+    }
+
+    /// <summary>改了"字段集"的行内编辑（时长切按回合/开关数值过滤）：重建参数区再提交。</summary>
+    void EditedRebuild()
+    {
+        RebuildParams();
+        RefreshBrief();
+        edited?.Invoke("编辑节点参数");
+    }
+
+    void RefreshBrief()
+    {
+        summaryStrip.text = BriefText();
+        title = TitleOf(Data);
+    }
+
+    void RebuildParams()
+    {
         paramList.Clear();
-        string brief = "";
         switch (Data)
         {
             case OpNodeData op:
                 switch (op.Kind)
                 {
                     case OpNodeKind.Damage:
-                        brief = $"{op.Amount} 点伤害";
-                        paramList.AddParam("数值", op.Amount.ToString());
-                        break;
                     case OpNodeKind.Heal:
-                        brief = $"{op.Amount} 点治疗";
-                        paramList.AddParam("数值", op.Amount.ToString());
+                        paramList.Add(PartNodeStyles.Num("数值", op.Amount, v => op.Amount = v, Edited));
                         break;
                     case OpNodeKind.ModifyAttribute:
-                        brief = $"{PartCardLabels.Attribute(op.Attribute)} {PartCardLabels.Mod(op.ModOp)} {op.Magnitude}（{PartCardLabels.Duration(op.Duration)}）";
-                        paramList.AddParam("属性", PartCardLabels.Attribute(op.Attribute));
-                        paramList.AddParam("修饰方式", PartCardLabels.Mod(op.ModOp));
-                        paramList.AddParam("数值", op.Magnitude.ToString());
-                        paramList.AddParam("时长", PartCardLabels.Duration(op.Duration) + (op.Duration == "Rounds" ? $" ×{op.Rounds} 回合" : ""));
+                        paramList.Add(PartNodeStyles.Choice("属性", PartCardLabels.AttributeValues, PartCardLabels.AttributeNames, op.Attribute, v => op.Attribute = v, Edited));
+                        paramList.Add(PartNodeStyles.Choice("修饰", PartCardLabels.ModValues, PartCardLabels.ModNames, op.ModOp, v => op.ModOp = v, Edited));
+                        paramList.Add(PartNodeStyles.Num("数值", op.Magnitude, v => op.Magnitude = v, Edited));
+                        paramList.Add(PartNodeStyles.Choice("时长", PartCardLabels.DurationValues, PartCardLabels.DurationNames, op.Duration, v => op.Duration = v, EditedRebuild));
+                        if (op.Duration == "Rounds")
+                            paramList.Add(PartNodeStyles.Int("回合", op.Rounds, v => op.Rounds = v, Edited));
                         break;
                     case OpNodeKind.DrawCards:
-                        brief = $"抽 {op.Count} 张";
-                        paramList.AddParam("张数", op.Count.ToString());
+                        paramList.Add(PartNodeStyles.Int("张数", op.Count, v => op.Count = v, Edited));
                         break;
                     case OpNodeKind.GrantTag:
-                        brief = op.Tag;
-                        paramList.AddParam("标签", op.Tag);
-                        paramList.AddParam("时长", PartCardLabels.Duration(op.Duration) + (op.Duration == "Rounds" ? $" ×{op.Rounds} 回合" : ""));
+                        paramList.Add(PartNodeStyles.Text("标签", op.Tag, v => op.Tag = v, Edited));
+                        paramList.Add(PartNodeStyles.Choice("时长", PartCardLabels.DurationValues, PartCardLabels.DurationNames, op.Duration, v => op.Duration = v, EditedRebuild));
+                        if (op.Duration == "Rounds")
+                            paramList.Add(PartNodeStyles.Int("回合", op.Rounds, v => op.Rounds = v, Edited));
                         break;
                     case OpNodeKind.Condition:
-                        brief = $"{PartCardLabels.Attribute(op.CondAttribute)} {PartCardLabels.Display(PartCardLabels.CompareValues, PartCardLabels.CompareNames, op.CondOp)} {op.CondValue}";
-                        paramList.AddParam("属性", PartCardLabels.Attribute(op.CondAttribute));
-                        paramList.AddParam("运算符", PartCardLabels.Display(PartCardLabels.CompareValues, PartCardLabels.CompareNames, op.CondOp));
-                        paramList.AddParam("值", op.CondValue.ToString());
-                        paramList.AddParam("求值对象", PartCardLabels.Display(PartCardLabels.SubjectValues, PartCardLabels.SubjectNames, op.CondSubject));
+                        paramList.Add(PartNodeStyles.Choice("属性", PartCardLabels.AttributeValues, PartCardLabels.AttributeNames, op.CondAttribute, v => op.CondAttribute = v, Edited));
+                        paramList.Add(PartNodeStyles.Choice("运算", PartCardLabels.CompareValues, PartCardLabels.CompareNames, op.CondOp, v => op.CondOp = v, Edited));
+                        paramList.Add(PartNodeStyles.Num("值", op.CondValue, v => op.CondValue = v, Edited));
+                        paramList.Add(PartNodeStyles.Choice("对象", PartCardLabels.SubjectValues, PartCardLabels.SubjectNames, op.CondSubject, v => op.CondSubject = v, Edited));
                         break;
                 }
-                if (op.Target != NodeTargetScope.ParentPassed)
-                {
-                    string target = op.Target == NodeTargetScope.Caster ? "施法者" : "技能主目标";
-                    brief += $"  [目标:{target}]";
-                    paramList.AddParam("节点目标", target);
-                }
+                paramList.Add(PartNodeStyles.Choice("节点目标", PartCardLabels.NodeScopeValues, PartCardLabels.NodeScopeNames, op.Target.ToString(),
+                    v => op.Target = (NodeTargetScope)Enum.Parse(typeof(NodeTargetScope), v), Edited));
                 break;
             case TargetSwitchNodeData ts:
-                brief = PartCardLabels.Target(ts.TargetMode);
-                paramList.AddParam("目标模式", PartCardLabels.Target(ts.TargetMode));
+                paramList.Add(PartNodeStyles.Choice("目标", PartCardLabels.TargetValues, PartCardLabels.TargetNames, ts.TargetMode, v => ts.TargetMode = v, Edited));
                 break;
             case TriggerConfigNodeData tc:
-                brief = PartCardLabels.EventTag(tc.EventTag)
-                    + (tc.SelfOnly ? " ·自身受" : "") + (tc.SourceOnly ? " ·自身攻" : "") + (tc.Once ? " ·一次" : "");
-                paramList.AddParam("事件", PartCardLabels.EventTag(tc.EventTag));
-                List<string> limits = new List<string>();
-                if (tc.SelfOnly) limits.Add("自身受");
-                if (tc.SourceOnly) limits.Add("自身攻");
-                if (tc.Once) limits.Add("一次");
-                if (limits.Count > 0) paramList.AddParam("限定", string.Join(" / ", limits));
-                if (tc.HasValueFilter) paramList.AddParam("数值过滤", $"≥ {tc.ValueFilterMin}");
+                paramList.Add(PartNodeStyles.Choice("事件", PartCardLabels.EventTagValues, PartCardLabels.EventTagNames, tc.EventTag, v => tc.EventTag = v, Edited));
+                paramList.Add(PartNodeStyles.Flag("自身受", tc.SelfOnly, v => tc.SelfOnly = v, Edited));
+                paramList.Add(PartNodeStyles.Flag("自身攻", tc.SourceOnly, v => tc.SourceOnly = v, Edited));
+                paramList.Add(PartNodeStyles.Flag("一次", tc.Once, v => tc.Once = v, Edited));
+                paramList.Add(PartNodeStyles.Flag("数值过滤", tc.HasValueFilter, v => tc.HasValueFilter = v, EditedRebuild));
+                if (tc.HasValueFilter)
+                    paramList.Add(PartNodeStyles.Num("≥", tc.ValueFilterMin, v => tc.ValueFilterMin = v, Edited));
                 break;
         }
-        summaryStrip.text = brief;
-        title = TitleOf(Data);
+    }
+
+    /// <summary>单行简述文案（收起态显示；行内/右栏改动后即时更新）。</summary>
+    string BriefText()
+    {
+        switch (Data)
+        {
+            case OpNodeData op:
+                string brief = op.Kind switch
+                {
+                    OpNodeKind.Damage => $"{op.Amount} 点伤害",
+                    OpNodeKind.Heal => $"{op.Amount} 点治疗",
+                    OpNodeKind.ModifyAttribute => $"{PartCardLabels.Attribute(op.Attribute)} {PartCardLabels.Mod(op.ModOp)} {op.Magnitude}（{PartCardLabels.Duration(op.Duration)}）",
+                    OpNodeKind.DrawCards => $"抽 {op.Count} 张",
+                    OpNodeKind.GrantTag => op.Tag,
+                    OpNodeKind.Condition => $"{PartCardLabels.Attribute(op.CondAttribute)} {PartCardLabels.Display(PartCardLabels.CompareValues, PartCardLabels.CompareNames, op.CondOp)} {op.CondValue}",
+                    _ => "",
+                };
+                if (op.Target != NodeTargetScope.ParentPassed)
+                    brief += $"  [目标:{(op.Target == NodeTargetScope.Caster ? "施法者" : "技能主目标")}]";
+                return brief;
+            case TargetSwitchNodeData ts:
+                return PartCardLabels.Target(ts.TargetMode);
+            case TriggerConfigNodeData tc:
+                return PartCardLabels.EventTag(tc.EventTag)
+                    + (tc.SelfOnly ? " ·自身受" : "") + (tc.SourceOnly ? " ·自身攻" : "") + (tc.Once ? " ·一次" : "");
+            default:
+                return "";
+        }
     }
 }
 
@@ -485,11 +529,13 @@ public sealed class RootNodeView : Node
     public readonly Dictionary<string, Port> Ports = new Dictionary<string, Port>();
     readonly VisualElement paramList;
     readonly Label summaryStrip;
+    readonly Action<string> edited;
     bool collapsed;
 
-    public RootNodeView(PartCardAuthoringAsset asset)
+    public RootNodeView(PartCardAuthoringAsset asset, Action<string> onEdited)
     {
         Asset = asset;
+        edited = onEdited;
         title = "技能节点（卡）";
         summaryStrip = PartNodeStyles.NewSummaryStrip();
         paramList = PartNodeStyles.NewParamList();
@@ -530,13 +576,26 @@ public sealed class RootNodeView : Node
             outputContainer.Add(port);
             Ports[key] = port;
         }
-        paramList.Clear();
-        paramList.AddParam("卡牌 Id", asset.CardId.ToString());
-        paramList.AddParam("费用", asset.Cost.ToString());
-        paramList.AddParam("技能目标", PartCardLabels.Target(asset.DefaultTarget));
-        paramList.AddParam("关键词", string.IsNullOrEmpty(asset.GrantTags) ? "无" : asset.GrantTags);
+        RebuildParams();
         summaryStrip.text = $"id {asset.CardId} · 费 {asset.Cost} · 目标 {PartCardLabels.Target(asset.DefaultTarget)} · 关键词 {(string.IsNullOrEmpty(asset.GrantTags) ? "无" : asset.GrantTags)}";
         RefreshExpandedState();
+    }
+
+    void RebuildParams()
+    {
+        paramList.Clear();
+        paramList.Add(PartNodeStyles.Int("卡牌Id", Asset.CardId, v => Asset.CardId = v, Edited));
+        paramList.Add(PartNodeStyles.Int("费用", Asset.Cost, v => Asset.Cost = v, Edited));
+        paramList.Add(PartNodeStyles.Choice("槽型", PartCardLabels.SlotValues, PartCardLabels.SlotNames, Asset.SlotType,
+            v => { Asset.SlotType = v; RefreshPorts(Asset); }, Edited));
+        paramList.Add(PartNodeStyles.Choice("目标", PartCardLabels.TargetValues, PartCardLabels.TargetNames, Asset.DefaultTarget, v => Asset.DefaultTarget = v, Edited));
+        paramList.Add(PartNodeStyles.Text("关键词", Asset.GrantTags, v => Asset.GrantTags = v, Edited));
+    }
+
+    void Edited()
+    {
+        summaryStrip.text = $"id {Asset.CardId} · 费 {Asset.Cost} · 目标 {PartCardLabels.Target(Asset.DefaultTarget)} · 关键词 {(string.IsNullOrEmpty(Asset.GrantTags) ? "无" : Asset.GrantTags)}";
+        edited?.Invoke("编辑卡字段");
     }
 
     static string DisplayName(string key) => key switch
@@ -550,9 +609,9 @@ public sealed class RootNodeView : Node
     };
 }
 
-/// <summary>两个节点视图共用的主体样式与构造（参数：字号 12、浅灰字、简述条深底 rgb(56,56,56)——XH 同款取值）。
+/// <summary>两个节点视图共用的主体样式与行内编辑字段工厂（定案 2026-10-31：参数直接显示在端口同一底板、可编辑）。
 /// 注意 Unity 6 的 Node.mainContainer 实为 node-border 根容器：主体内容必须插进 contents（端口行的父级），
-/// 直接 mainContainer.Add 会贴到节点最底部黑边（验收反馈两次"参数在最下面黑底"的根因）。</summary>
+/// 直接 mainContainer.Add 会贴到节点最底部黑边。数字/文本框 isDelayed=true：回车/失焦才提交（一次输入=一步撤销）。</summary>
 static class PartNodeStyles
 {
     /// <summary>把元素插到端口行正下方（端口行 → 本元素 → 原有下方内容）。</summary>
@@ -569,36 +628,70 @@ static class PartNodeStyles
         style = { marginTop = 4 },
     };
 
+    /// <summary>收起态的一行简述：纯文本浅灰小字，无背景（定案：展开态无黑底条，简述只读）。</summary>
     public static Label NewSummaryStrip() => new Label
     {
         name = "summaryStrip",
         style =
         {
             fontSize = 12,
-            color = new Color(0.85f, 0.85f, 0.85f, 1f),
-            backgroundColor = new Color(56f / 255f, 56f / 255f, 56f / 255f, 1f),
+            color = new Color(0.75f, 0.75f, 0.75f, 1f),
             marginTop = 4,
-            marginBottom = 2,
-            paddingLeft = 4,
-            paddingRight = 4,
-            paddingTop = 2,
-            paddingBottom = 2,
             whiteSpace = WhiteSpace.Normal,
         },
     };
 
-    /// <summary>参数清单加一行"字段名: 值"。</summary>
-    public static void AddParam(this VisualElement list, string name, string value)
+    public static DoubleField Num(string label, double value, Action<double> set, Action commit)
     {
-        list.Add(new Label($"{name}: {value}")
+        DoubleField field = new DoubleField(label) { value = value, isDelayed = true };
+        field.RegisterValueChangedCallback(e => { set(e.newValue); commit(); });
+        return WithParamStyle(field);
+    }
+
+    public static IntegerField Int(string label, int value, Action<int> set, Action commit)
+    {
+        IntegerField field = new IntegerField(label) { value = value, isDelayed = true };
+        field.RegisterValueChangedCallback(e => { set(e.newValue); commit(); });
+        return WithParamStyle(field);
+    }
+
+    public static TextField Text(string label, string value, Action<string> set, Action commit)
+    {
+        TextField field = new TextField(label) { value = value ?? "", isDelayed = true };
+        field.RegisterValueChangedCallback(e => { set(e.newValue); commit(); });
+        return WithParamStyle(field);
+    }
+
+    public static Toggle Flag(string label, bool value, Action<bool> set, Action commit)
+    {
+        Toggle field = new Toggle(label) { value = value };
+        field.RegisterValueChangedCallback(e => { set(e.newValue); commit(); });
+        return WithParamStyle(field);
+    }
+
+    /// <summary>中文下拉：显示 names、存 values（与右栏 Popup 同一套 PartCardLabels 值↔名映射）。</summary>
+    public static PopupField<string> Choice(string label, string[] values, string[] names, string current, Action<string> set, Action commit)
+    {
+        int index = Math.Max(0, Array.IndexOf(values, current));
+        PopupField<string> field = new PopupField<string>(label, new List<string>(names), index);
+        field.RegisterValueChangedCallback(e =>
         {
-            style =
+            int i = Array.IndexOf(names, e.newValue);
+            if (i >= 0)
             {
-                fontSize = 12,
-                color = new Color(0.8f, 0.8f, 0.8f, 1f),
-                marginTop = 1,
-                whiteSpace = WhiteSpace.Normal,
-            },
+                set(values[i]);
+                commit();
+            }
         });
+        return WithParamStyle(field);
+    }
+
+    static T WithParamStyle<T>(T field) where T : BaseField
+    {
+        field.style.marginTop = 2;
+        field.style.fontSize = 12;
+        field.labelElement.style.minWidth = 56;
+        field.labelElement.style.fontSize = 12;
+        return field;
     }
 }

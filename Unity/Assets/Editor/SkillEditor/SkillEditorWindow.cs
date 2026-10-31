@@ -269,6 +269,8 @@ public sealed class SkillEditorWindow : EditorWindow
         Undo.RegisterCompleteObjectUndo(undoToken, opName);
         RefreshUndoToken();
         MarkCurrentDirty();
+        propertyView.MarkDirtyRepaint(); // 行内编辑后右栏同步（右栏与节点双编辑入口）
+        poolView.MarkDirtyRepaint();     // 卡牌Id 行内改动左栏同步
     }
 
     /// <summary>撤销基线刷新为当前卡现态（开卡/切卡/删卡后调用）。</summary>
