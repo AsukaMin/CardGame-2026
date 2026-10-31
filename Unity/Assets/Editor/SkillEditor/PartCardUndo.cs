@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using UnityEngine;
 
 /// <summary>
@@ -18,10 +19,19 @@ public sealed class PartCardUndoToken : ScriptableObject
 
 public static class PartCardUndo
 {
+    /// <summary>只序列化字段：UnityEngine.Vector2 的 normalized 等只读属性会构成自引用环（实测报
+    /// Self referencing loop），而快照契约本就是纯字段 POCO——属性一律不进快照。</summary>
+    sealed class FieldsOnlyResolver : DefaultContractResolver
+    {
+        protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
+            => base.CreateProperties(type, MemberSerialization.Fields);
+    }
+
     static readonly JsonSerializerSettings settings = new JsonSerializerSettings
     {
         TypeNameHandling = TypeNameHandling.Auto, // List<PartGraphNode> 派生项带 $type
         Formatting = Formatting.None,
+        ContractResolver = new FieldsOnlyResolver(),
     };
 
     [Serializable]
