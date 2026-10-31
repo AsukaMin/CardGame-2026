@@ -22,7 +22,7 @@ public sealed class SkillGraphView : GraphView
 
     public SkillGraphView()
     {
-        SetupZoom(ContentZoomer.DefaultMinScale, ContentZoomer.DefaultMaxScale);
+        SetupZoom(ContentZoomer.DefaultMinScale, 3f); // 最大 1.25 → 3（验收反馈：放大上限不够）；最小 0.25 不动
         this.AddManipulator(new ContentDragger());
         this.AddManipulator(new SelectionDragger());
         this.AddManipulator(new RectangleSelector());
@@ -77,6 +77,7 @@ public sealed class SkillGraphView : GraphView
     {
         PartNodeView view = new PartNodeView(data);
         view.SetPosition(new Rect(data.Position, PartNodeView.DefaultSize));
+        view.style.height = StyleKeyword.Auto; // 参数行数不定，高度随内容（宽度仍 DefaultSize.x）
         view.RefreshSummary();
         return view;
     }
@@ -332,7 +333,8 @@ public sealed class PartNodeView : Node
     public readonly Port OutputYes; // 条件分支专用（可空）
     public readonly Port OutputNo;
 
-    readonly Label summary;
+    readonly VisualElement paramList;  // 展开态：主要参数清单（端口行正下方）
+    readonly Label summaryStrip;       // 收起态：黑底一行简述
 
     public PartNodeView(PartGraphNode data)
     {
@@ -359,21 +361,30 @@ public sealed class PartNodeView : Node
                 outputContainer.Add(Output);
                 break;
         }
-        // 摘要放节点主体（与端口同区灰底）——XH 的 DamageEffectNode 同款；不进 extensionContainer（深色块、字小，验收反馈）
-        summary = new Label
-        {
-            name = "summary",
-            style =
-            {
-                fontSize = 12,                             // XH 节点内显式字号同款（12）
-                color = new Color(0.8f, 0.8f, 0.8f, 1f),   // XH 摘要同款浅灰
-                whiteSpace = WhiteSpace.Normal,            // 长摘要换行不溢出
-                marginTop = 4,
-            },
-        };
-        mainContainer.Add(summary);
+        foreach (Port port in new[] { Input, Output, OutputYes, OutputNo })
+            if (port != null) port.alwaysVisible = true; // 收起时端口不消失（Unity 6 默认收起会隐藏未连接端口）
+
+        // 先插简述条再插参数区 → 最终顺序：端口行 → paramList → summaryStrip
+        summaryStrip = PartNodeStyles.NewSummaryStrip();
+        paramList = PartNodeStyles.NewParamList();
+        PartNodeStyles.InsertBelowPorts(this, summaryStrip);
+        PartNodeStyles.InsertBelowPorts(this, paramList);
         RefreshSummary();
+        ApplyCollapseState();
         RefreshExpandedState();
+    }
+
+    /// <summary>收起行为改造（2026-10-31 定案）：端口 alwaysVisible 不收，只收参数区、换成黑底简述条。</summary>
+    protected override void ToggleCollapse()
+    {
+        base.ToggleCollapse();
+        ApplyCollapseState();
+    }
+
+    void ApplyCollapseState()
+    {
+        paramList.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
+        summaryStrip.style.display = expanded ? DisplayStyle.None : DisplayStyle.Flex;
     }
 
     public static string TitleOf(PartGraphNode data) => data switch
@@ -395,60 +406,108 @@ public sealed class PartNodeView : Node
         _ => kind.ToString(),
     };
 
-    /// <summary>节点参数摘要（只读——完整编辑在右栏；M5 简化。中文显示经 PartCardLabels，数据侧仍存英文枚举名）。</summary>
+    /// <summary>刷新节点显示：展开态=主要参数清单（每字段一行），收起态=单行简述。
+    /// 只读——完整编辑在右栏（行内编辑 M6）；中文显示经 PartCardLabels，数据侧仍存英文枚举名。</summary>
     public void RefreshSummary()
     {
+        paramList.Clear();
+        string brief = "";
         switch (Data)
         {
             case OpNodeData op:
-                summary.text = op.Kind switch
+                switch (op.Kind)
                 {
-                    OpNodeKind.Damage => $"{op.Amount} 点伤害",
-                    OpNodeKind.Heal => $"{op.Amount} 点治疗",
-                    OpNodeKind.ModifyAttribute => $"{PartCardLabels.Attribute(op.Attribute)} {PartCardLabels.Mod(op.ModOp)} {op.Magnitude}（{PartCardLabels.Duration(op.Duration)}）",
-                    OpNodeKind.DrawCards => $"抽 {op.Count} 张",
-                    OpNodeKind.GrantTag => op.Tag,
-                    OpNodeKind.Condition => $"{PartCardLabels.Attribute(op.CondAttribute)} {PartCardLabels.Display(PartCardLabels.CompareValues, PartCardLabels.CompareNames, op.CondOp)} {op.CondValue}",
-                    _ => "",
-                };
+                    case OpNodeKind.Damage:
+                        brief = $"{op.Amount} 点伤害";
+                        paramList.AddParam("数值", op.Amount.ToString());
+                        break;
+                    case OpNodeKind.Heal:
+                        brief = $"{op.Amount} 点治疗";
+                        paramList.AddParam("数值", op.Amount.ToString());
+                        break;
+                    case OpNodeKind.ModifyAttribute:
+                        brief = $"{PartCardLabels.Attribute(op.Attribute)} {PartCardLabels.Mod(op.ModOp)} {op.Magnitude}（{PartCardLabels.Duration(op.Duration)}）";
+                        paramList.AddParam("属性", PartCardLabels.Attribute(op.Attribute));
+                        paramList.AddParam("修饰方式", PartCardLabels.Mod(op.ModOp));
+                        paramList.AddParam("数值", op.Magnitude.ToString());
+                        paramList.AddParam("时长", PartCardLabels.Duration(op.Duration) + (op.Duration == "Rounds" ? $" ×{op.Rounds} 回合" : ""));
+                        break;
+                    case OpNodeKind.DrawCards:
+                        brief = $"抽 {op.Count} 张";
+                        paramList.AddParam("张数", op.Count.ToString());
+                        break;
+                    case OpNodeKind.GrantTag:
+                        brief = op.Tag;
+                        paramList.AddParam("标签", op.Tag);
+                        paramList.AddParam("时长", PartCardLabels.Duration(op.Duration) + (op.Duration == "Rounds" ? $" ×{op.Rounds} 回合" : ""));
+                        break;
+                    case OpNodeKind.Condition:
+                        brief = $"{PartCardLabels.Attribute(op.CondAttribute)} {PartCardLabels.Display(PartCardLabels.CompareValues, PartCardLabels.CompareNames, op.CondOp)} {op.CondValue}";
+                        paramList.AddParam("属性", PartCardLabels.Attribute(op.CondAttribute));
+                        paramList.AddParam("运算符", PartCardLabels.Display(PartCardLabels.CompareValues, PartCardLabels.CompareNames, op.CondOp));
+                        paramList.AddParam("值", op.CondValue.ToString());
+                        paramList.AddParam("求值对象", PartCardLabels.Display(PartCardLabels.SubjectValues, PartCardLabels.SubjectNames, op.CondSubject));
+                        break;
+                }
                 if (op.Target != NodeTargetScope.ParentPassed)
-                    summary.text += $"  [目标:{(op.Target == NodeTargetScope.Caster ? "施法者" : "技能主目标")}]";
+                {
+                    string target = op.Target == NodeTargetScope.Caster ? "施法者" : "技能主目标";
+                    brief += $"  [目标:{target}]";
+                    paramList.AddParam("节点目标", target);
+                }
                 break;
             case TargetSwitchNodeData ts:
-                summary.text = PartCardLabels.Target(ts.TargetMode);
+                brief = PartCardLabels.Target(ts.TargetMode);
+                paramList.AddParam("目标模式", PartCardLabels.Target(ts.TargetMode));
                 break;
             case TriggerConfigNodeData tc:
-                summary.text = PartCardLabels.EventTag(tc.EventTag)
+                brief = PartCardLabels.EventTag(tc.EventTag)
                     + (tc.SelfOnly ? " ·自身受" : "") + (tc.SourceOnly ? " ·自身攻" : "") + (tc.Once ? " ·一次" : "");
+                paramList.AddParam("事件", PartCardLabels.EventTag(tc.EventTag));
+                List<string> limits = new List<string>();
+                if (tc.SelfOnly) limits.Add("自身受");
+                if (tc.SourceOnly) limits.Add("自身攻");
+                if (tc.Once) limits.Add("一次");
+                if (limits.Count > 0) paramList.AddParam("限定", string.Join(" / ", limits));
+                if (tc.HasValueFilter) paramList.AddParam("数值过滤", $"≥ {tc.ValueFilterMin}");
                 break;
         }
+        summaryStrip.text = brief;
         title = TitleOf(Data);
     }
 }
 
-/// <summary>技能主节点（根）：卡级字段在右栏编辑；此处显示摘要 + 按槽型生成输出端口。</summary>
+/// <summary>技能主节点（根）：卡级字段在右栏编辑；主体显示卡级参数清单 + 按槽型生成输出端口（收起同普通节点）。</summary>
 public sealed class RootNodeView : Node
 {
     public readonly PartCardAuthoringAsset Asset;
     public readonly Dictionary<string, Port> Ports = new Dictionary<string, Port>();
-    Label summary;
+    readonly VisualElement paramList;
+    readonly Label summaryStrip;
 
     public RootNodeView(PartCardAuthoringAsset asset)
     {
         Asset = asset;
         title = "技能节点（卡）";
-        summary = new Label
-        {
-            style =
-            {
-                fontSize = 12,
-                color = new Color(0.8f, 0.8f, 0.8f, 1f),
-                whiteSpace = WhiteSpace.Normal,
-                marginTop = 4,
-            },
-        };
-        mainContainer.Add(summary);
+        summaryStrip = PartNodeStyles.NewSummaryStrip();
+        paramList = PartNodeStyles.NewParamList();
+        PartNodeStyles.InsertBelowPorts(this, summaryStrip);
+        PartNodeStyles.InsertBelowPorts(this, paramList); // 先插简述条再插参数区 → 端口行 → paramList → summaryStrip
         RefreshPorts(asset);
+        ApplyCollapseState();
+    }
+
+    /// <summary>收起行为同普通节点：端口不收，只收参数区、换黑底简述条。</summary>
+    protected override void ToggleCollapse()
+    {
+        base.ToggleCollapse();
+        ApplyCollapseState();
+    }
+
+    void ApplyCollapseState()
+    {
+        paramList.style.display = expanded ? DisplayStyle.Flex : DisplayStyle.None;
+        summaryStrip.style.display = expanded ? DisplayStyle.None : DisplayStyle.Flex;
     }
 
     public void RefreshPorts(PartCardAuthoringAsset asset)
@@ -464,10 +523,16 @@ public sealed class RootNodeView : Node
             Port port = Port.Create<Edge>(Orientation.Horizontal, Direction.Output, Port.Capacity.Multi, typeof(bool));
             port.portName = DisplayName(key);
             port.viewDataKey = key; // 连线数据里的 From 键
+            port.alwaysVisible = true; // 收起时端口不消失
             outputContainer.Add(port);
             Ports[key] = port;
         }
-        summary.text = $"id {asset.CardId} · 费 {asset.Cost} · 目标 {PartCardLabels.Target(asset.DefaultTarget)} · 关键词 {(string.IsNullOrEmpty(asset.GrantTags) ? "无" : asset.GrantTags)}";
+        paramList.Clear();
+        paramList.AddParam("卡牌 Id", asset.CardId.ToString());
+        paramList.AddParam("费用", asset.Cost.ToString());
+        paramList.AddParam("技能目标", PartCardLabels.Target(asset.DefaultTarget));
+        paramList.AddParam("关键词", string.IsNullOrEmpty(asset.GrantTags) ? "无" : asset.GrantTags);
+        summaryStrip.text = $"id {asset.CardId} · 费 {asset.Cost} · 目标 {PartCardLabels.Target(asset.DefaultTarget)} · 关键词 {(string.IsNullOrEmpty(asset.GrantTags) ? "无" : asset.GrantTags)}";
         RefreshExpandedState();
     }
 
@@ -480,4 +545,57 @@ public sealed class RootNodeView : Node
         RootPorts.OnLeave => "离场·触发",
         _ => key,
     };
+}
+
+/// <summary>两个节点视图共用的主体样式与构造（参数：字号 12、浅灰字、简述条深底 rgb(56,56,56)——XH 同款取值）。
+/// 注意 Unity 6 的 Node.mainContainer 实为 node-border 根容器：主体内容必须插进 contents（端口行的父级），
+/// 直接 mainContainer.Add 会贴到节点最底部黑边（验收反馈两次"参数在最下面黑底"的根因）。</summary>
+static class PartNodeStyles
+{
+    /// <summary>把元素插到端口行正下方（端口行 → 本元素 → 原有下方内容）。</summary>
+    public static void InsertBelowPorts(Node node, VisualElement element)
+    {
+        VisualElement top = node.outputContainer.parent; // topContainer（input/output 两行所在）
+        VisualElement contents = top.parent;
+        contents.Insert(contents.IndexOf(top) + 1, element);
+    }
+
+    public static VisualElement NewParamList() => new VisualElement
+    {
+        name = "paramList",
+        style = { marginTop = 4 },
+    };
+
+    public static Label NewSummaryStrip() => new Label
+    {
+        name = "summaryStrip",
+        style =
+        {
+            fontSize = 12,
+            color = new Color(0.85f, 0.85f, 0.85f, 1f),
+            backgroundColor = new Color(56f / 255f, 56f / 255f, 56f / 255f, 1f),
+            marginTop = 4,
+            marginBottom = 2,
+            paddingLeft = 4,
+            paddingRight = 4,
+            paddingTop = 2,
+            paddingBottom = 2,
+            whiteSpace = WhiteSpace.Normal,
+        },
+    };
+
+    /// <summary>参数清单加一行"字段名: 值"。</summary>
+    public static void AddParam(this VisualElement list, string name, string value)
+    {
+        list.Add(new Label($"{name}: {value}")
+        {
+            style =
+            {
+                fontSize = 12,
+                color = new Color(0.8f, 0.8f, 0.8f, 1f),
+                marginTop = 1,
+                whiteSpace = WhiteSpace.Normal,
+            },
+        });
+    }
 }
