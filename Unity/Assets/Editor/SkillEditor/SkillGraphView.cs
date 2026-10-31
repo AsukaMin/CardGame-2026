@@ -178,7 +178,9 @@ public sealed class SkillGraphView : GraphView
 
     public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)
     {
-        return graphElements.OfType<Port>()
+        // Unity 6 的 graphElements 源码级排除 Port（GraphView.cs:288 Where(e => !(e is Port))）——
+        // 端口必须 Query 直查；M5 曾用 graphElements.OfType<Port>() 恒得空列表，拖线时全端口禁用、无处可放
+        return this.Query<Port>().ToList()
             .Where(p => p.direction != startPort.direction && p.node != startPort.node)
             .Where(p => p.direction != Direction.Input || !p.connected) // 输入单进
             .Where(p => !(p.node is RootNodeView))                       // 根无输入
@@ -357,8 +359,19 @@ public sealed class PartNodeView : Node
                 outputContainer.Add(Output);
                 break;
         }
-        summary = new Label { name = "summary" };
-        extensionContainer.Add(summary);
+        // 摘要放节点主体（与端口同区灰底）——XH 的 DamageEffectNode 同款；不进 extensionContainer（深色块、字小，验收反馈）
+        summary = new Label
+        {
+            name = "summary",
+            style =
+            {
+                fontSize = 12,                             // XH 节点内显式字号同款（12）
+                color = new Color(0.8f, 0.8f, 0.8f, 1f),   // XH 摘要同款浅灰
+                whiteSpace = WhiteSpace.Normal,            // 长摘要换行不溢出
+                marginTop = 4,
+            },
+        };
+        mainContainer.Add(summary);
         RefreshSummary();
         RefreshExpandedState();
     }
@@ -424,8 +437,17 @@ public sealed class RootNodeView : Node
     {
         Asset = asset;
         title = "技能节点（卡）";
-        summary = new Label();
-        extensionContainer.Add(summary);
+        summary = new Label
+        {
+            style =
+            {
+                fontSize = 12,
+                color = new Color(0.8f, 0.8f, 0.8f, 1f),
+                whiteSpace = WhiteSpace.Normal,
+                marginTop = 4,
+            },
+        };
+        mainContainer.Add(summary);
         RefreshPorts(asset);
     }
 
